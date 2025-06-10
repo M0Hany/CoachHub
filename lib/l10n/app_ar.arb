@@ -1,0 +1,319 @@
+{
+  "@@locale": "ar",
+  "workout_plans_title": "خطط التمرين",
+  "workout_plans_create_plan": "إنشاء خطة تمرين",
+  "workout_plans_plan_title": "عنوان الخطة",
+  "workout_plans_plan_duration": "مدة الخطة",
+  "workout_plans_days": "أيام",
+  "workout_plans_next": "التالي",
+  "workout_plans_day": "يوم",
+  "workout_plans_choose_muscle": "اختر مجموعة العضلات",
+  "workout_plans_muscle_groups": "{muscle}",
+  "@workout_plans_muscle_groups": {
+    "description": "Muscle group name",
+    "placeholders": {
+      "muscle": {
+        "type": "String"
+      }
+    }
+  },
+  "workout_plans_exercise_details_sets": "المجموعات",
+  "workout_plans_exercise_details_reps": "التكرارات",
+  "workout_plans_exercise_details_rest_time": "وقت الراحة",
+  "workout_plans_exercise_details_seconds": "ثانية",
+  "workout_plans_exercise_details_note": "ملاحظة",
+  "workout_plans_exercise_details_video_url": "رابط الفيديو",
+  "workout_plans_apply": "تطبيق",
+  "muscleSuffix": "عضلة",
+  "noExercisesAvailable": "لا توجد تمارين متاحة لهذه المجموعة العضلية",
+  "animationComingSoon": "الرسوم المتحركة قادمة قريباً",
+  "plans": "الخطط",
+  "workoutPlansTab": "خطط التمارين",
+  "nutritionPlansTab": "خطط التغذية",
+  "planTitlePrefix": "عنوان الخطة: ",
+  "planDurationPrefix": "مدة الخطة: ",
+  "dayLabel": "يوم",
+  "showExercise": "عرض التمرين",
+  "workoutPlansTitle": "خطط التمارين",
+  "sets": "المجموعات:",
+  "setsRange": "{min}-{max} مجموعة",
+  "reps": "التكرارات:",
+  "repsRange": "{min}-{max} تكرار",
+  "restTime": "وقت الراحة:",
+  "restTimeRange": "{min}-{max} ثانية",
+  "noteFromCoach": "ملاحظة من المدرب:",
+  "exerciseNote": "حاول الحفاظ على وتيرة متحكم بها طوال التمرين. لا تدع الوزن يسحبك للخلف بسرعة كبيرة - قاوم في الطريق للخارج والعودة. هذا سيساعد في تحقيق أقصى قدر من مشاركة العضلات ومنع الإصابة.",
+  "welcomeBack": "مرحباً بعودتك",
+  "loginToContinue": "الرجاء تسجيل الدخول للمتابعة",
+  "loginSubtitle": "الرجاء إدخال البريد الإلكتروني وكلمة المرور لتسجيل الدخول",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "error": "حدث خطأ",
+  "validation_required": "هذا الحقل مطلوب",
+  "validation_email": "الرجاء إدخال بريد إلكتروني صحيح",
+  "validation_password_length": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+  "signIn": "تسجيل الدخول",
+  "dontHaveAccount": "ليس لديك حساب؟ سجل الآن",
+  "forgetPassword": "نسيت كلمة المرور؟",
+  "navSearch": "بحث",
+  "navChats": "المحادثات",
+  "navHome": "الرئيسية",
+  "navProfile": "الحساب",
+  "navNotifications": "الإشعارات",
+  "navSettings": "الإعدادات",
+  "navPlans": "الخطط",
+  "settings": "الإعدادات",
+  "language": "اللغة",
+  "accountSettings": "إعدادات الحساب",
+  "notificationSettings": "إعدادات الإشعارات",
+  "availability": "التوفر",
+  "pricing": "التسعير",
+  "darkMode": "الوضع الداكن",
+  "expertise": "الخبرة",
+  "certifications": "الشهادات",
+  "specializations": "التخصصات",
+  "logout": "تسجيل الخروج",
+  "settingsTitle": "الإعدادات",
+  "languageSettings": "إعدادات اللغة",
+  "accountSettingsTitle": "إعدادات الحساب",
+  "notificationSettingsTitle": "إعدادات الإشعارات",
+  "darkModeTitle": "الوضع الداكن",
+  "logoutButton": "تسجيل الخروج",
+  "createAccount": "إنشاء حساب",
+  "username": "اسم المستخدم",
+  "enterEmail": "أدخل بريدك الإلكتروني",
+  "enterUsername": "أدخل اسم المستخدم",
+  "enterPassword": "أدخل كلمة المرور",
+  "validation_username_length": "يجب أن يكون اسم المستخدم 3 أحرف على الأقل",
+  "validation_username_format": "يمكن أن يحتوي اسم المستخدم على أحرف وأرقام فقط",
+  "registerSuccess": "تم التسجيل بنجاح! الرجاء إكمال ملفك الشخصي.",
+  "signUp": "تسجيل",
+  "alreadyHaveAccount": "لديك حساب بالفعل؟ سجل دخول",
+  "plansTitle": "الخطط",
+  "workoutPlans": "خطط التمارين",
+  "nutritionPlans": "خطط التغذية",
+  "noWorkoutPlans": "لا توجد خطط تمارين حتى الآن",
+  "noNutritionPlans": "لا توجد خطط تغذية حتى الآن",
+  "daysCount": "{count} يوم",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutLabel": "تمرين",
+  "nutritionLabel": "تغذية",
+  "notificationsTitle": "الإشعارات",
+  "notificationsToday": "اليوم",
+  "yesterday": "أمس",
+  "notificationsJustNow": "الآن",
+  "interestedInCoaching": "{name} مهتم بالتدريب معك",
+  "@interestedInCoaching": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "checkedOffWorkout": "قام مدربك {name} بتحديث خطة التدريب الخاصة بك",
+  "@checkedOffWorkout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "completedPlan": "{name} أكمل خطته",
+  "@completedPlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestedChange": "{name} طلب تغييراً في خطته",
+  "@requestedChange": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dayAgo": "منذ {count} يوم",
+  "@dayAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yourExpertise": "خبرتك",
+  "selectExpertiseAreas": "اختر مجالات خبرتك",
+  "weightTraining": "تدريب الأوزان",
+  "cardio": "تمارين القلب",
+  "yoga": "يوغا",
+  "pilates": "بيلاتس",
+  "crossfit": "كروسفت",
+  "nutrition": "تغذية",
+  "sportsPerformance": "الأداء الرياضي",
+  "rehabilitation": "إعادة التأهيل",
+  "continueButton": "متابعة",
+  "goodMorning": "صباح الخير،",
+  "searchClients": "ابحث عن العملاء...",
+  "showHealthData": "عرض البيانات الصحية",
+  "age": "العمر",
+  "personalInfo": "المعلومات الشخصية",
+  "edit": "تعديل",
+  "name": "الاسم",
+  "emailLabel": "البريد الإلكتروني",
+  "gender": "الجنس",
+  "coachExpertFields": "مجالات خبرة المدرب",
+  "posts": "المنشورات",
+  "showAllPosts": "عرض كل المنشورات >",
+  "timeAgo": "منذ {time}",
+  "@timeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "ageGender": "العمر: {age} - {gender}",
+  "@ageGender": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      },
+      "gender": {
+        "type": "String"
+      }
+    }
+  },
+  "profile": "الملف الشخصي",
+  "createNewPlan": "إنشاء خطة جديدة",
+  "planTitle": "عنوان الخطة",
+  "planDuration": "مدة الخطة (أيام)",
+  "next": "التالي",
+  "noPlanData": "لا توجد بيانات خطة متاحة",
+  "planDurationDays": "{days} يوم",
+  "@planDurationDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "page": "الصفحة {number}",
+  "@page": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "breakfast": "الإفطار",
+  "lunch": "الغداء",
+  "dinner": "العشاء",
+  "snack": "سناك",
+  "savePlan": "حفظ الخطة",
+  "selectDayFirst": "الرجاء اختيار يوم أولاً",
+  "apply": "تطبيق",
+  "note": "ملاحظة",
+  "dashboard": "لوحة التحكم",
+  "percentSymbol": "%",
+  "kg": "كجم",
+  "cm": "سم",
+  "personalTrainer": "مدرب شخصي",
+  "fillProfile": "ملء الملف الشخصي",
+  "enterFullName": "أدخل اسمك الكامل",
+  "enterBio": "أدخل نبذة عنك",
+  "male": "ذكر",
+  "female": "أنثى",
+  "userType": "نوع المستخدم",
+  "coach": "مدرب",
+  "errorPickingImage": "خطأ في اختيار الصورة",
+  "fillAllFields": "يرجى ملء جميع الحقول",
+  "healthInformation": "المعلومات الصحية",
+  "height": "الطول (سم)",
+  "weight": "الوزن (كجم)",
+  "enterAge": "الرجاء إدخال عمرك",
+  "enterHeight": "الرجاء إدخال طولك",
+  "enterWeight": "الرجاء إدخال وزنك",
+  "enterValidNumber": "الرجاء إدخال رقم صحيح",
+  "fitnessGoals": "أهدافك الرياضية",
+  "saveHealthData": "حفظ البيانات الصحية",
+  "muscleGain": "زيادة العضلات",
+  "overallHealth": "الصحة العامة",
+  "competitionPreparation": "التحضير للمنافسة",
+  "boostAthleticAgility": "تعزيز الرشاقة الرياضية",
+  "boostImmuneSystem": "تعزيز جهاز المناعة",
+  "increaseExplosiveness": "زيادة القوة الانفجارية",
+  "enterFatPercentage": "الرجاء إدخال نسبة الدهون في الجسم",
+  "enterMusclePercentage": "الرجاء إدخال نسبة كتلة العضلات",
+  "trainee": "متدرب",
+  "typeMessage": "اكتب رسالة...",
+  "messages": "الرسائل",
+  "searchForClientsFields": "البحث عن المتدربين",
+  "upperChestMuscle": "عضلات الصدر العلوية",
+  "shoulderFrontdelts": "عضلات الكتف الأمامية",
+  "showPlan": "عرض الخطة",
+  "bodyWeight": "وزن الجسم",
+  "bodyHeight": "طول الجسم",
+  "fatsPercentage": "نسبة الدهون",
+  "bodyMuscle": "كتلة العضلات",
+  "fatsGraph": "رسم بياني للدهون",
+  "monthly": "شهري",
+  "currentFatPercentage": "نسبة الدهون الحالية",
+  "continueAction": "متابعة",
+  "@setsRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@repsRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "@restTimeRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "skip": "تخطي",
+  "getStarted": "ابدأ الآن",
+  "onboardingWelcomeTitle": "مرحباً بك في CoachHub!",
+  "onboardingWelcomeDesc": "سيكون CoachHub معك لدعم كل مدرب ومتدرب من خلال منصة شاملة تبسط تخطيط التمارين وتتبع الأداء في الوقت الفعلي وتضمن رحلة لياقة سلسة.",
+  "onboardingLevelUpTitle": "ارتقِ برحلة لياقتك سواء كنت مدرباً أو متدرباً",
+  "onboardingLevelUpDesc": "ارتقِ بلياقتك إلى المستوى التالي مع منصتنا الشاملة المصممة للمدربين والمتدربين.",
+  "onboardingProgressTitle": "من الخطة إلى التقدم",
+  "onboardingProgressDesc": "حول أهداف لياقتك إلى إنجازات مع أدوات التخطيط والتتبع الذكية.",
+  "realTimeTracking": "تتبع التقدم في الوقت الفعلي",
+  "seamlessTraining": "تدريب سلس",
+  "workoutNutritionPlans": "خطط التمارين والتغذية",
+  "visualProgress": "تتبع التقدم المرئي",
+  "interactiveTraining": "جرب خطط التدريب التفاعلية",
+  "smartCoaching": "حقق أهدافك مع التدريب الذكي",
+  "contactCoach": "تواصل مع المدرب",
+  "viewOnboarding": "عرض شاشات الترحيب",
+  "nutrition_plans_create_plan": "إنشاء خطة تغذية",
+  "nutrition_plans_plan_title": "عنوان خطة التغذية",
+  "nutrition_plans_plan_duration": "مدة الخطة",
+  "nutrition_plans_days": "أيام"
+}

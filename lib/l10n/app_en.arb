@@ -1,0 +1,318 @@
+{
+  "@@locale": "en",
+  "workout_plans_title": "Workout Plans",
+  "workout_plans_create_plan": "Create Workout Plan",
+  "workout_plans_plan_title": "Plan Title",
+  "workout_plans_plan_duration": "Plan Duration",
+  "workout_plans_days": "days",
+  "workout_plans_next": "Next",
+  "workout_plans_day": "Day",
+  "workout_plans_choose_muscle": "Choose Muscle",
+  "workout_plans_muscle_groups": "{muscle}",
+  "@workout_plans_muscle_groups": {
+    "description": "Muscle group name",
+    "placeholders": {
+      "muscle": {
+        "type": "String"
+      }
+    }
+  },
+  "workout_plans_exercise_details_sets": "Sets",
+  "workout_plans_exercise_details_reps": "Reps",
+  "workout_plans_exercise_details_rest_time": "Rest Time",
+  "workout_plans_exercise_details_seconds": "seconds",
+  "workout_plans_exercise_details_note": "Note",
+  "workout_plans_exercise_details_video_url": "Video URL",
+  "workout_plans_apply": "Apply",
+  "welcomeBack": "Welcome Back",
+  "loginToContinue": "Please login to continue",
+  "loginSubtitle": "Please enter your email and password to log in",
+  "email": "Email",
+  "password": "Password",
+  "error": "An error occurred",
+  "validation_required": "This field is required",
+  "validation_email": "Please enter a valid email",
+  "validation_password_length": "Password must be at least 6 characters",
+  "signIn": "Sign In",
+  "dontHaveAccount": "Don't have an account? Sign up",
+  "forgetPassword": "Forget Password?",
+  "navSearch": "Search",
+  "navChats": "Chats",
+  "navHome": "Home",
+  "navProfile": "Profile",
+  "navNotifications": "Notifications",
+  "navSettings": "Settings",
+  "navPlans": "Plans",
+  "settings": "Settings",
+  "language": "Language",
+  "accountSettings": "Account Settings",
+  "notificationSettings": "Notification Settings",
+  "availability": "Availability",
+  "pricing": "Pricing",
+  "darkMode": "Dark Mode",
+  "expertise": "Expertise",
+  "certifications": "Certifications",
+  "specializations": "Specializations",
+  "logout": "Logout",
+  "settingsTitle": "Settings",
+  "languageSettings": "Language Settings",
+  "accountSettingsTitle": "Account Settings",
+  "notificationSettingsTitle": "Notification Settings",
+  "darkModeTitle": "Dark Mode",
+  "logoutButton": "Logout",
+  "createAccount": "Create an account",
+  "username": "Username",
+  "enterEmail": "Enter your email",
+  "enterUsername": "Enter your username",
+  "enterPassword": "Enter your password",
+  "validation_username_length": "Username must be at least 3 characters",
+  "validation_username_format": "Username can only contain letters and numbers",
+  "registerSuccess": "Registration successful! Please complete your profile.",
+  "signUp": "Sign Up",
+  "alreadyHaveAccount": "Already have an account? Sign in",
+  "plansTitle": "Plans",
+  "workoutPlans": "Workout Plans",
+  "nutritionPlans": "Nutrition Plans",
+  "noWorkoutPlans": "No workout plans yet",
+  "noNutritionPlans": "No nutrition plans yet",
+  "daysCount": "{count} days",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutLabel": "Workout",
+  "nutritionLabel": "Nutrition",
+  "notificationsTitle": "Notifications",
+  "notificationsToday": "Today",
+  "yesterday": "Yesterday",
+  "notificationsJustNow": "Just now",
+  "interestedInCoaching": "{name} is interested in coaching with you",
+  "@interestedInCoaching": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "checkedOffWorkout": "{name} checked off their workout",
+  "@checkedOffWorkout": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "completedPlan": "{name} completed their plan",
+  "@completedPlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestedChange": "{name} requested a change to their plan",
+  "@requestedChange": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dayAgo": "{count} day ago",
+  "@dayAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "yourExpertise": "Your Expertise",
+  "selectExpertiseAreas": "Select your areas of expertise",
+  "weightTraining": "Weight Training",
+  "cardio": "Cardio",
+  "yoga": "Yoga",
+  "pilates": "Pilates",
+  "crossfit": "CrossFit",
+  "nutrition": "Nutrition",
+  "sportsPerformance": "Sports Performance",
+  "rehabilitation": "Rehabilitation",
+  "continueAction": "Continue",
+  "errorPickingImage": "Error picking image",
+  "fillAllFields": "Please fill all fields",
+  "fillProfile": "Fill Profile",
+  "enterFullName": "Enter your full name",
+  "enterBio": "Enter your bio",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "userType": "User Type",
+  "coach": "Coach",
+  "trainee": "Trainee",
+  "next": "Next",
+  "continueButton": "Continue",
+  "enterValidNumber": "Please enter a valid number",
+  "muscleGain": "Muscle Gain",
+  "overallHealth": "Overall Health",
+  "competitionPreparation": "Competition Preparation",
+  "boostAthleticAgility": "Boost Athletic Agility",
+  "boostImmuneSystem": "Boost Immune System",
+  "increaseExplosiveness": "Increase Explosiveness",
+  "healthInformation": "Health Information",
+  "age": "Age",
+  "enterAge": "Enter your age",
+  "height": "Height",
+  "enterHeight": "Enter your height",
+  "weight": "Weight",
+  "enterWeight": "Enter your weight",
+  "fatsPercentage": "Fats Percentage",
+  "enterFatPercentage": "Enter your fat percentage",
+  "bodyMuscle": "Body Muscle",
+  "enterMusclePercentage": "Enter your muscle percentage",
+  "fitnessGoals": "Fitness Goals",
+  "saveHealthData": "Save Health Data",
+  "typeMessage": "Type a message",
+  "messages": "Messages",
+  "searchForClientsFields": "Search for clients",
+  "goodMorning": "Good Morning",
+  "upperChestMuscle": "Upper Chest Muscle",
+  "shoulderFrontdelts": "Shoulder Front Delts",
+  "showPlan": "Show Plan",
+  "dashboard": "Dashboard",
+  "bodyWeight": "Body Weight",
+  "kg": "kg",
+  "bodyHeight": "Body Height",
+  "cm": "cm",
+  "percentSymbol": "%",
+  "fatsGraph": "Fats Graph",
+  "monthly": "Monthly",
+  "currentFatPercentage": "Current Fat Percentage",
+  "profile": "Profile",
+  "personalInfo": "Personal Info",
+  "edit": "Edit",
+  "name": "Name",
+  "emailLabel": "Email",
+  "coachExpertFields": "Coach Expert Fields",
+  "posts": "Posts",
+  "showAllPosts": "Show All Posts",
+  "timeAgo": "{time} ago",
+  "@timeAgo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "createNewPlan": "Create New Plan",
+  "planTitle": "Plan Title",
+  "planDuration": "Plan Duration",
+  "noPlanData": "No plan data available",
+  "planDurationDays": "{days} days",
+  "@planDurationDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "page": "Page {number}",
+  "@page": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "breakfast": "Breakfast",
+  "lunch": "Lunch",
+  "dinner": "Dinner",
+  "snack": "Snack",
+  "note": "Note",
+  "apply": "Apply",
+  "selectDayFirst": "Please select a day first",
+  "savePlan": "Save Plan",
+  "searchClients": "Search Clients",
+  "ageGender": "{age} years, {gender}",
+  "@ageGender": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      },
+      "gender": {
+        "type": "String"
+      }
+    }
+  },
+  "showHealthData": "Show Health Data",
+  "plans": "Plans",
+  "workoutPlansTab": "Workout Plans",
+  "nutritionPlansTab": "Nutrition Plans",
+  "planTitlePrefix": "Plan: ",
+  "planDurationPrefix": "Duration: ",
+  "dayLabel": "Day",
+  "showExercise": "Show Exercise",
+  "muscleSuffix": "Exercises",
+  "noExercisesAvailable": "No exercises available",
+  "animationComingSoon": "Animation coming soon",
+  "workoutPlansTitle": "Workout Plans",
+  "sets": "Sets",
+  "setsRange": "{min}-{max} sets",
+  "@setsRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "reps": "Reps",
+  "repsRange": "{min}-{max} reps",
+  "@repsRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "restTime": "Rest Time",
+  "restTimeRange": "{min}-{max} seconds",
+  "@restTimeRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "noteFromCoach": "Note from Coach",
+  "exerciseNote": "Exercise Note",
+  "skip": "Skip",
+  "getStarted": "Get Started",
+  "onboardingWelcomeTitle": "Welcome to CoachHub!",
+  "onboardingWelcomeDesc": "CoachHub will be with you supporting every coach and trainee with an all-in-one platform that simplifies workout planning, tracks real-time performance, and ensures a smooth fitness journey.",
+  "onboardingLevelUpTitle": "Level up your fitness journey whether you're coaching or training",
+  "onboardingLevelUpDesc": "Take your fitness to the next level with our comprehensive platform designed for both coaches and trainees.",
+  "onboardingProgressTitle": "From Plan to Progress",
+  "onboardingProgressDesc": "Transform your fitness goals into achievements with smart planning and tracking tools.",
+  "realTimeTracking": "Real-Time Progress tracking",
+  "seamlessTraining": "Seamless Training",
+  "workoutNutritionPlans": "Workout & nutrition plans",
+  "visualProgress": "Visual Progress Tracking",
+  "interactiveTraining": "Experience Interactive Training Plans",
+  "smartCoaching": "Achieve Your Goals with Smart Coaching",
+  "contactCoach": "Contact Coach",
+  "viewOnboarding": "View Onboarding",
+  "nutrition_plans_create_plan": "Create Nutrition Plan",
+  "nutrition_plans_plan_title": "Nutrition Plan Title",
+  "nutrition_plans_plan_duration": "Plan Duration",
+  "nutrition_plans_days": "days"
+}
