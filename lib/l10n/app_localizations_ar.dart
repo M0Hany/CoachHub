@@ -383,6 +383,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bodyMuscle => 'كتلة العضلات';
 
   @override
+  String get muscles => 'العضلات';
+
+  @override
   String get enterMusclePercentage => 'الرجاء إدخال نسبة كتلة العضلات';
 
   @override
@@ -647,4 +650,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nutrition_plans_days => 'أيام';
+
+  @override
+  String get checkYourEmail => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String get otpVerificationMessage => 'لقد أرسلنا لك رسالة تحتوي على رمز تأكيد لتأكيد بريدك الإلكتروني. يرجى إدخاله لإكمال التسجيل.';
+
+  @override
+  String get didntReceiveCode => 'لم تستلم الرمز؟';
+
+  @override
+  String get resendCode => 'إعادة إرسال الرمز';
+
+  @override
+  String get verify => 'تحقق';
+
+  @override
+  String get invalidOtpCode => 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+
+  @override
+  String get retry => 'إعادة المحاولة';
 }

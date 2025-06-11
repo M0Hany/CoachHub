@@ -65,7 +65,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginToContinue => 'Please login to continue';
 
   @override
-  String get loginSubtitle => 'Please enter your email and password to log in';
+  String get loginSubtitle => 'Please enter your email and password to login';
 
   @override
   String get email => 'Email';
@@ -383,6 +383,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bodyMuscle => 'Body Muscle';
 
   @override
+  String get muscles => 'Muscles';
+
+  @override
   String get enterMusclePercentage => 'Enter your muscle percentage';
 
   @override
@@ -647,4 +650,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutrition_plans_days => 'days';
+
+  @override
+  String get checkYourEmail => 'Check your email';
+
+  @override
+  String get otpVerificationMessage => 'We sent you a message with a confirmation code to confirm your email. Please enter it to complete your registration.';
+
+  @override
+  String get didntReceiveCode => 'Didn\'t receive code?';
+
+  @override
+  String get resendCode => 'Resend Code';
+
+  @override
+  String get verify => 'Verify';
+
+  @override
+  String get invalidOtpCode => 'Invalid verification code. Please try again.';
+
+  @override
+  String get retry => 'Retry';
 }

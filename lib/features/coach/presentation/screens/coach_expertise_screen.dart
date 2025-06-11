@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/models/models.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/http_client.dart';
+import 'dart:developer' as developer;
 
 class CoachExpertiseScreen extends StatefulWidget {
   const CoachExpertiseScreen({super.key});
@@ -13,44 +16,96 @@ class CoachExpertiseScreen extends StatefulWidget {
 }
 
 class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
-  final List<String> selectedExpertise = [];
-  final List<String> expertiseKeys = [
-    'weightTraining',
-    'cardio',
-    'yoga',
-    'pilates',
-    'crossfit',
-    'nutrition',
-    'sportsPerformance',
-    'rehabilitation'
-  ];
+  final List<int> selectedExpertiseIds = [];
+  static const int requiredExpertiseCount = 3;
+  bool _isLoading = false;
+  bool _isFetchingData = true;
+  List<ExperienceField> experienceFields = [];
+  String? _error;
 
-  String getLocalizedExpertise(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'weightTraining':
-        return l10n.weightTraining;
-      case 'cardio':
-        return l10n.cardio;
-      case 'yoga':
-        return l10n.yoga;
-      case 'pilates':
-        return l10n.pilates;
-      case 'crossfit':
-        return l10n.crossfit;
-      case 'nutrition':
-        return l10n.nutrition;
-      case 'sportsPerformance':
-        return l10n.sportsPerformance;
-      case 'rehabilitation':
-        return l10n.rehabilitation;
-      default:
-        return key;
+  @override
+  void initState() {
+    super.initState();
+    _fetchExperienceFields();
+  }
+
+  Future<void> _fetchExperienceFields() async {
+    try {
+      final response = await HttpClient().get<Map<String, dynamic>>('/api/experience-field/');
+      
+      if (response.data?['success'] == true) {
+        final fields = (response.data?['data']['experience_fields'] as List)
+            .map((field) => ExperienceField.fromJson(field))
+            .toList();
+        
+        setState(() {
+          experienceFields = fields;
+          _isFetchingData = false;
+        });
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to fetch experience fields');
+      }
+    } catch (e) {
+      developer.log('Error fetching experience fields: $e', name: 'CoachExpertiseScreen');
+      setState(() {
+        _error = e.toString();
+        _isFetchingData = false;
+      });
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (_isFetchingData) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.yourExpertise),
+          backgroundColor: AppTheme.primaryButtonColor,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.yourExpertise),
+          backgroundColor: AppTheme.primaryButtonColor,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _error = null;
+                    _isFetchingData = true;
+                  });
+                  _fetchExperienceFields();
+                },
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -69,21 +124,33 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Please select exactly 3 areas of expertise',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8.0,
               runSpacing: 8.0,
-              children: expertiseKeys.map((expertiseKey) {
-                final isSelected = selectedExpertise.contains(expertiseKey);
+              children: experienceFields.map((field) {
+                final isSelected = selectedExpertiseIds.contains(field.id);
                 return FilterChip(
-                  label: Text(getLocalizedExpertise(l10n, expertiseKey)),
+                  label: Text(field.name),
                   selected: isSelected,
                   onSelected: (bool selected) {
                     setState(() {
                       if (selected) {
-                        selectedExpertise.add(expertiseKey);
+                        if (selectedExpertiseIds.length < requiredExpertiseCount) {
+                          selectedExpertiseIds.add(field.id);
+                        } else {
+                          _showErrorSnackBar('You can only select 3 areas of expertise');
+                        }
                       } else {
-                        selectedExpertise.remove(expertiseKey);
+                        selectedExpertiseIds.remove(field.id);
                       }
                     });
                   },
@@ -96,24 +163,45 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: selectedExpertise.isEmpty
+                onPressed: _isLoading || selectedExpertiseIds.length != requiredExpertiseCount
                     ? null
                     : () async {
+                        setState(() => _isLoading = true);
+                        try {
                         final authProvider = context.read<AuthProvider>();
-                        final success = await authProvider.updateCoachExpertise(
-                          expertise: selectedExpertise.map(
-                            (key) => getLocalizedExpertise(l10n, key)
-                          ).toList(),
+                        final request = CoachExpertiseUpdateRequest(
+                            experienceIds: selectedExpertiseIds,
                         );
+                          final success = await authProvider.updateCoachExpertise(request);
                         if (success && context.mounted) {
                           context.go('/coach/profile');
+                          } else if (context.mounted) {
+                            _showErrorSnackBar(authProvider.error ?? 'Failed to update expertise');
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isLoading = false);
+                          }
                         }
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryButtonColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(l10n.continueAction),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        selectedExpertiseIds.length == requiredExpertiseCount
+                            ? l10n.continueAction
+                            : '${selectedExpertiseIds.length}/3 Selected',
+                      ),
               ),
             ),
           ],

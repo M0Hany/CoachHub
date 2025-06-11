@@ -26,7 +26,7 @@
   "workout_plans_apply": "Apply",
   "welcomeBack": "Welcome Back",
   "loginToContinue": "Please login to continue",
-  "loginSubtitle": "Please enter your email and password to log in",
+  "loginSubtitle": "Please enter your email and password to login",
   "email": "Email",
   "password": "Password",
   "error": "An error occurred",
@@ -170,6 +170,7 @@
   "fatsPercentage": "Fats Percentage",
   "enterFatPercentage": "Enter your fat percentage",
   "bodyMuscle": "Body Muscle",
+  "muscles": "Muscles",
   "enterMusclePercentage": "Enter your muscle percentage",
   "fitnessGoals": "Fitness Goals",
   "saveHealthData": "Save Health Data",
@@ -314,5 +315,12 @@
   "nutrition_plans_create_plan": "Create Nutrition Plan",
   "nutrition_plans_plan_title": "Nutrition Plan Title",
   "nutrition_plans_plan_duration": "Plan Duration",
-  "nutrition_plans_days": "days"
+  "nutrition_plans_days": "days",
+  "checkYourEmail": "Check your email",
+  "otpVerificationMessage": "We sent you a message with a confirmation code to confirm your email. Please enter it to complete your registration.",
+  "didntReceiveCode": "Didn't receive code?",
+  "resendCode": "Resend Code",
+  "verify": "Verify",
+  "invalidOtpCode": "Invalid verification code. Please try again.",
+  "retry": "Retry"
 }

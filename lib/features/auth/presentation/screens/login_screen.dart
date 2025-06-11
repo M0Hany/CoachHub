@@ -83,41 +83,24 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await authProvider.login(
         _emailController.text,
         _passwordController.text,
-        context,
       );
 
-      if (success && mounted) {
+      if (!mounted) return;
+
+      if (success) {
         final userRole = authProvider.userRole;
-        final isAuthenticated = authProvider.isAuthenticated;
-
-        debugPrint('Login success, user role: $userRole, isAuthenticated: $isAuthenticated');
-        debugPrint('Current user: ${authProvider.currentUser?.toJson()}');
-
-        if (userRole == UserRole.coach) {
-          debugPrint('Navigating to coach profile');
-          if (mounted) {
-            context.go('/coach/profile');
-          }
-        } else if (userRole == UserRole.trainee) {
-          debugPrint('Navigating to trainee home');
-          if (mounted) {
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (mounted) {
-                context.go('/trainee/home');
-              }
-            });
-          }
+        if (userRole == 'coach') {
+          context.go('/coach/dashboard');
         } else {
-          debugPrint('Unknown user role: $userRole');
-          if (mounted) {
+          context.go('/trainee/dashboard');
+        }
+      } else {
+        // Show error message
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.error),
-                backgroundColor: Colors.red,
+          const SnackBar(
+            content: Text('Login failed. Please check your credentials.'),
               ),
             );
-          }
-        }
       }
     } catch (e) {
       debugPrint('Login error: $e');

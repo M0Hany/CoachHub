@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 // Auth screens
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/auth/presentation/screens/complete_profile_screen.dart';
+import '../../features/auth/presentation/screens/complete_profile_screen.dart' hide UserType;
+import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/models/user_model.dart';  // Import for UserType
 
 // Coach screens
 import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart';
@@ -39,7 +41,6 @@ import '../../features/trainee/presentation/screens/workout/exercise_instruction
 import '../../features/trainee/presentation/screens/health/trainee_health_data_screen.dart';
 
 import 'package:provider/provider.dart';
-import '../../core/constants/enums.dart';
 import 'dart:developer' as developer;
 import '../../features/auth/presentation/screens/onboarding/onboarding_screen.dart';
 
@@ -56,28 +57,72 @@ final GoRouter appRouter = GoRouter(
   },
   redirect: (BuildContext context, GoRouterState state) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isLoggedIn = authProvider.isAuthenticated;
-    final userRole = authProvider.userRole;
     final currentLocation = state.matchedLocation;
+    final authStatus = authProvider.status;
+
+    developer.log(
+      'Redirecting: Status=$authStatus, Location=$currentLocation',
+      name: 'Router',
+    );
 
     // Public routes that don't require authentication
     final isPublicRoute = currentLocation == '/login' ||
         currentLocation == '/register' ||
-        currentLocation == '/complete-profile' ||
         currentLocation == '/onboarding';
 
-    // If not logged in, only allow public routes
-    if (!isLoggedIn) {
-      if (isPublicRoute) return null;
-      return '/login';
-    }
+    // Auth flow routes
+    final isAuthFlowRoute = currentLocation == '/verify-otp' ||
+        currentLocation == '/complete-profile' ||
+        currentLocation == '/trainee-health-data' ||
+        currentLocation == '/coach/expertise';
 
-    // If logged in and trying to access auth routes, redirect to home
-    if (isLoggedIn && (currentLocation == '/login' || currentLocation == '/register')) {
-      return userRole == UserRole.coach ? '/coach/home' : '/trainee/home';
-    }
+    // Handle different auth states
+    switch (authStatus) {
+      case AuthStatus.authenticated:
+        if (isPublicRoute || isAuthFlowRoute) {
+          final userRole = authProvider.userRole.toLowerCase();
+          return userRole == 'coach' ? '/coach/home' : '/trainee/home';
+        }
+        return null;
 
-    return null;
+      case AuthStatus.requiresOtp:
+        if (currentLocation != '/verify-otp') {
+          return '/verify-otp';
+        }
+        return null;
+
+      case AuthStatus.requiresProfileCompletion:
+        if (currentLocation != '/complete-profile') {
+          return '/complete-profile';
+        }
+        return null;
+
+      case AuthStatus.profileIncomplete:
+        // Allow access to expertise and health data screens during profile completion
+        if (currentLocation == '/coach/expertise' || currentLocation == '/trainee-health-data') {
+          return null; // Allow these routes
+        }
+        final userType = authProvider.currentUser?.type;
+        if (userType == UserType.trainee) {
+          return '/trainee-health-data';
+        } else if (userType == UserType.coach) {
+          return '/coach/expertise';
+        }
+        return '/complete-profile';
+
+      case AuthStatus.unauthenticated:
+      case AuthStatus.error:
+        if (!isPublicRoute && currentLocation != '/login') {
+          return '/login';
+        }
+        return null;
+
+      default:
+        if (!isPublicRoute && !isAuthFlowRoute) {
+          return '/login';
+        }
+        return null;
+    }
   },
   routes: [
     // Auth routes
@@ -88,6 +133,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/verify-otp',
+      builder: (context, state) => const OtpVerificationScreen(),
     ),
     GoRoute(
       path: '/complete-profile',

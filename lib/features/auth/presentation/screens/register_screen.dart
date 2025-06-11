@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import 'dart:developer' as developer;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -66,6 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      developer.log('Starting registration process', name: 'RegisterScreen');
 
       try {
         final success = await context.read<AuthProvider>().register(
@@ -74,24 +76,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
               password: _passwordController.text,
             );
 
+        developer.log('Registration result: $success, mounted: $mounted', name: 'RegisterScreen');
+
         if (success && mounted) {
+          developer.log('Showing success snackbar', name: 'RegisterScreen');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!.registerSuccess),
               backgroundColor: AppTheme.success,
+              duration: const Duration(seconds: 2),
             ),
           );
-          context.go('/complete-profile');
+          
+          // Add a slight delay to allow the snackbar to be visible
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (mounted) {  // Double-check mounted state before navigation
+            developer.log('Navigating to OTP screen', name: 'RegisterScreen');
+            context.push('/verify-otp');
+          } else {
+            developer.log('Widget not mounted before navigation', name: 'RegisterScreen');
+          }
+        } else {
+          if (mounted) {
+            final error = context.read<AuthProvider>().error ?? 'Registration failed';
+            developer.log('Showing error snackbar: $error', name: 'RegisterScreen');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error),
+                backgroundColor: AppTheme.error,
+              ),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
-          ),
-        );
+        developer.log('Registration error: $e', name: 'RegisterScreen', error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        }
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }

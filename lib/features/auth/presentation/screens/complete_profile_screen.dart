@@ -5,12 +5,8 @@ import 'dart:io';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
-import '../../data/models/user_profile.dart';
+import '../../models/user_model.dart';
 import 'package:go_router/go_router.dart';
-
-enum Gender { male, female }
-
-enum UserType { coach, trainee }
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -64,12 +60,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       setState(() => _isLoading = true);
 
       try {
-        final success = await context.read<AuthProvider>().updateProfile(
-              name: _fullNameController.text,
+        final success = await context.read<AuthProvider>().storeBasicProfile(
+              fullName: _fullNameController.text,
+              gender: _selectedGender!,
+              type: _selectedUserType!,
+              imageFile: _profileImage,
               bio: _bioController.text,
-              gender: _selectedGender!.name,
-              role: _selectedUserType!.name,
-              profileImage: _profileImage?.path,
             );
 
         if (success && context.mounted) {

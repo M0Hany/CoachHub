@@ -52,30 +52,31 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    // Wait for the auth provider to initialize
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.status == AuthStatus.initial) {
-      // Wait for status to change from initial
-      await Future.doWhile(() async {
-        await Future.delayed(const Duration(milliseconds: 100));
-        return authProvider.status == AuthStatus.initial && mounted;
-      });
-    }
-
-    if (!mounted) return;
-
-    // Add a minimum splash screen duration
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
+    final authProvider = context.read<AuthProvider>();
     final authStatus = authProvider.status;
+
     switch (authStatus) {
+      case AuthStatus.initial:
+      case AuthStatus.authenticating:
+        // Stay on splash screen with loading indicator
+        break;
       case AuthStatus.authenticated:
         context.go('/dashboard');
         break;
       case AuthStatus.unauthenticated:
-      case AuthStatus.initial: // Fallback to login if still initial somehow
+      case AuthStatus.error:
         context.go('/login');
+        break;
+      case AuthStatus.unverified:
+      case AuthStatus.requiresOtp:
+        context.go('/verify');
+        break;
+      case AuthStatus.profileIncomplete:
+      case AuthStatus.requiresProfileCompletion:
+        context.go('/complete-profile');
         break;
     }
   }

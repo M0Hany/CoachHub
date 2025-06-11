@@ -206,7 +206,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Please enter your email and password to log in'**
+  /// **'Please enter your email and password to login'**
   String get loginSubtitle;
 
   /// No description provided for @email.
@@ -815,6 +815,12 @@ abstract class AppLocalizations {
   /// **'Body Muscle'**
   String get bodyMuscle;
 
+  /// No description provided for @muscles.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscles'**
+  String get muscles;
+
   /// No description provided for @enterMusclePercentage.
   ///
   /// In en, this message translates to:
@@ -1318,6 +1324,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'days'**
   String get nutrition_plans_days;
+
+  /// No description provided for @checkYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get checkYourEmail;
+
+  /// No description provided for @otpVerificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent you a message with a confirmation code to confirm your email. Please enter it to complete your registration.'**
+  String get otpVerificationMessage;
+
+  /// No description provided for @didntReceiveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive code?'**
+  String get didntReceiveCode;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Code'**
+  String get resendCode;
+
+  /// No description provided for @verify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verify;
+
+  /// No description provided for @invalidOtpCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code. Please try again.'**
+  String get invalidOtpCode;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

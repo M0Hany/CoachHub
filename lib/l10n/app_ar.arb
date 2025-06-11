@@ -262,6 +262,7 @@
   "bodyHeight": "طول الجسم",
   "fatsPercentage": "نسبة الدهون",
   "bodyMuscle": "كتلة العضلات",
+  "muscles": "العضلات",
   "fatsGraph": "رسم بياني للدهون",
   "monthly": "شهري",
   "currentFatPercentage": "نسبة الدهون الحالية",
@@ -315,5 +316,12 @@
   "nutrition_plans_create_plan": "إنشاء خطة تغذية",
   "nutrition_plans_plan_title": "عنوان خطة التغذية",
   "nutrition_plans_plan_duration": "مدة الخطة",
-  "nutrition_plans_days": "أيام"
+  "nutrition_plans_days": "أيام",
+  "checkYourEmail": "تحقق من بريدك الإلكتروني",
+  "otpVerificationMessage": "لقد أرسلنا لك رسالة تحتوي على رمز تأكيد لتأكيد بريدك الإلكتروني. يرجى إدخاله لإكمال التسجيل.",
+  "didntReceiveCode": "لم تستلم الرمز؟",
+  "resendCode": "إعادة إرسال الرمز",
+  "verify": "تحقق",
+  "invalidOtpCode": "رمز التحقق غير صحيح. حاول مرة أخرى.",
+  "retry": "إعادة المحاولة"
 }
