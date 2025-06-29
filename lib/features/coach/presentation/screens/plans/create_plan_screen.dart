@@ -6,6 +6,7 @@ import '../../../../../../core/theme/app_theme.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/widgets/custom_text_field.dart';
 import '../../../../../../core/widgets/primary_button.dart';
+import '../../../../../../core/network/http_client.dart';
 import 'workout/calendar/workout_plan_calendar_screen.dart';
 import 'nutrition/calendar/nutrition_plan_calendar_screen.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -248,17 +249,84 @@ class _CreatePlanScreenState extends State<CreatePlanScreen> with SingleTickerPr
               ),
               const SizedBox(height: 80),
               PrimaryButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_titleController.text.trim().isNotEmpty) {
                     if (_tabController.index == 0) {
-                      context.push('/coach/plans/workout/calendar', extra: {
-                        'title': _titleController.text.trim(),
-                        'duration': _duration,
-                      });
+                      // Create workout plan
+                      try {
+                        final httpClient = HttpClient();
+                        
+                        // Create days array based on duration
+                        final days = List.generate(_duration, (index) => {
+                          'day_number': index + 1,
+                          'exercises': [],
+                        });
+
+                        final response = await httpClient.post<Map<String, dynamic>>(
+                          '/api/plans/workout/',
+                          data: {
+                            'title': _titleController.text.trim(),
+                            'duration': _duration,
+                            'days': days,
+                          },
+                        );
+
+                        if (response.data?['status'] == 'success') {
+                          final workoutId = response.data!['data']['workout_id'];
+                          if (mounted) {
+                            context.push('/coach/plans/workout/calendar', extra: {
+                              'planId': workoutId,
+                              'duration': _duration,
+                            });
+                          }
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error creating workout plan: $e')),
+                          );
+                        }
+                      }
                     } else {
-                      final provider = context.read<NutritionPlanProvider>();
-                      provider.initializePlan(_titleController.text.trim(), _duration);
-                      context.push('/coach/plans/nutrition/calendar');
+                      // Create nutrition plan
+                      try {
+                        final httpClient = HttpClient();
+                        
+                        // Create days array based on duration
+                        final days = List.generate(_duration, (index) => {
+                          'day_number': index + 1,
+                          'breakfast': '',
+                          'lunch': '',
+                          'dinner': '',
+                          'snack': '',
+                          'notes': '',
+                        });
+
+                        final response = await httpClient.post<Map<String, dynamic>>(
+                          '/api/plans/nutrition/',
+                          data: {
+                            'title': _titleController.text.trim(),
+                            'duration': _duration,
+                            'days': days,
+                          },
+                        );
+
+                        if (response.data?['status'] == 'success') {
+                          final nutritionId = response.data!['data']['nutrition_id'];
+                          if (mounted) {
+                            context.push('/coach/plans/nutrition/calendar', extra: {
+                              'planId': nutritionId,
+                              'duration': _duration,
+                            });
+                          }
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error creating nutrition plan: $e')),
+                          );
+                        }
+                      }
                     }
                   }
                 },

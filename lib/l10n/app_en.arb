@@ -322,5 +322,6 @@
   "resendCode": "Resend Code",
   "verify": "Verify",
   "invalidOtpCode": "Invalid verification code. Please try again.",
-  "retry": "Retry"
+  "retry": "Retry",
+  "noTraineesSubscribed": "No trainees are subscribed to you yet"
 }

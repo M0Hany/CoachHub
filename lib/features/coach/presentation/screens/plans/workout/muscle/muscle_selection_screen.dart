@@ -3,10 +3,12 @@ import '../../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../core/theme/app_theme.dart';
 import '../../../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../../../core/constants/enums.dart';
+import '../../../../../../../core/network/http_client.dart';
 import '../exercise/exercise_selection_screen.dart';
 import '../../../../../../../l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 
-class MuscleSelectionScreen extends StatelessWidget {
+class MuscleSelectionScreen extends StatefulWidget {
   final int dayNumber;
 
   const MuscleSelectionScreen({
@@ -15,19 +17,81 @@ class MuscleSelectionScreen extends StatelessWidget {
   });
 
   @override
+  State<MuscleSelectionScreen> createState() => _MuscleSelectionScreenState();
+}
+
+class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
+  bool _isLoading = true;
+  String? _error;
+  List<String> _muscles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    print('MuscleSelectionScreen: Initializing with day number: ${widget.dayNumber}');
+    _loadMuscles();
+  }
+
+  Future<void> _loadMuscles() async {
+    print('MuscleSelectionScreen: Loading muscles');
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.get<Map<String, dynamic>>(
+        '/api/plans/workout/muscles',
+      );
+
+      print('MuscleSelectionScreen: Received response: ${response.data}');
+      if (response.data?['status'] == 'success') {
+        setState(() {
+          _muscles = List<String>.from(response.data!['data']['muscles']);
+          _isLoading = false;
+        });
+        print('MuscleSelectionScreen: Loaded ${_muscles.length} muscles');
+      }
+    } catch (e) {
+      print('MuscleSelectionScreen: Error loading muscles: $e');
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final muscles = [
-      'Upper Chest',
-      'Middle Chest',
-      'Lower Chest',
-      'Shoulder Sidedelts',
-      'Shoulder Frontdelts',
-      'Bicep Longhead',
-      'Bicep Shorthead',
-      'Brachialis',
-      'Brachioradialis',
-    ];
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            l10n.workout_plans_title,
+            style: AppTheme.bodyMedium,
+          ),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            l10n.workout_plans_title,
+            style: AppTheme.bodyMedium,
+          ),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Text('Error: $_error'),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -70,10 +134,10 @@ class MuscleSelectionScreen extends StatelessWidget {
                         child: Scrollbar(
                           child: ListView.separated(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                            itemCount: muscles.length,
+                            itemCount: _muscles.length,
                             separatorBuilder: (context, index) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final muscle = muscles[index];
+                              final muscle = _muscles[index];
                               return Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -93,22 +157,20 @@ class MuscleSelectionScreen extends StatelessWidget {
                                     ),
                                   ),
                                   title: Text(
-                                    l10n.workout_plans_muscle_groups(muscle),
+                                    muscle,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ExerciseSelectionScreen(
-                                          dayNumber: dayNumber,
-                                          muscleGroup: muscle,
-                                        ),
-                                      ),
-                                    );
+                                    print('MuscleSelectionScreen: Navigating to exercises with day ${widget.dayNumber} and muscle $muscle');
+                                    final params = {
+                                      'day_number': widget.dayNumber,
+                                      'muscle_group': muscle,
+                                    };
+                                    print('MuscleSelectionScreen: Navigation parameters: $params');
+                                    context.push('/coach/plans/workout/exercises', extra: params);
                                   },
                                 ),
                               );

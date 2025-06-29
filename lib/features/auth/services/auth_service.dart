@@ -182,4 +182,67 @@ class AuthService {
   Future<bool> isAuthenticated() async {
     return _tokenService.isAuthenticated();
   }
+
+  // Save token
+  Future<void> saveToken(String token) async {
+    await _tokenService.saveTokens(
+      token: token,
+      refreshToken: null, // No refresh token at this stage
+    );
+  }
+
+  // Fetch user profile
+  Future<AuthResponseModel> fetchProfile() async {
+    try {
+      final response = await _httpClient.get<Map<String, dynamic>>(
+        '/api/profile/',
+      );
+
+      if (response.data == null) {
+        return AuthResponseModel(
+          success: false,
+          error: 'No response data',
+        );
+      }
+
+      // Check if the response has a status field
+      final isSuccess = response.data!['status'] == 'success';
+      
+      if (!isSuccess) {
+        return AuthResponseModel(
+          success: false,
+          error: response.data!['message'] ?? 'Failed to fetch profile',
+        );
+      }
+
+      // Extract user data from the profile response
+      final userData = response.data!['data']['profile'];
+      if (userData == null) {
+        return AuthResponseModel(
+          success: false,
+          error: 'No profile data found',
+        );
+      }
+
+      try {
+        final user = UserModel.fromJson(userData);
+        return AuthResponseModel(
+          success: true,
+          data: AuthData(user: user),
+        );
+      } catch (e) {
+        developer.log('Error parsing user data: $e', name: 'AuthService', error: e);
+        return AuthResponseModel(
+          success: false,
+          error: 'Error parsing profile data: $e',
+        );
+      }
+    } catch (e) {
+      developer.log('Error fetching profile: $e', name: 'AuthService', error: e);
+      return AuthResponseModel(
+        success: false,
+        error: e.toString(),
+      );
+    }
+  }
 } 

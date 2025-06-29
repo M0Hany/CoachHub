@@ -70,6 +70,17 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
   void initState() {
     super.initState();
     _pageController = PageController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+      if (extra != null) {
+        final planId = extra['planId'] as int?;
+        if (planId != null) {
+          final provider = context.read<NutritionPlanProvider>();
+          provider.setNutritionPlanId(planId);
+        }
+      }
+    });
   }
 
   @override

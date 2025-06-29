@@ -671,4 +671,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get retry => 'إعادة المحاولة';
+
+  @override
+  String get noTraineesSubscribed => 'لا يوجد متدربين مشتركين معك حتى الآن';
 }

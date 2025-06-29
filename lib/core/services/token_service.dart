@@ -6,6 +6,7 @@ import 'dart:developer' as developer;
 class TokenService {
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _onboardingShownKey = 'onboarding_shown';
   
   final FlutterSecureStorage _storage;
   final Dio _dio;
@@ -73,6 +74,28 @@ class TokenService {
     } catch (e) {
       developer.log('Error clearing tokens: $e', name: 'TokenService', error: e);
       rethrow;
+    }
+  }
+
+  // Mark onboarding as shown
+  Future<void> markOnboardingAsShown() async {
+    try {
+      await _storage.write(key: _onboardingShownKey, value: 'true');
+      developer.log('Onboarding marked as shown', name: 'TokenService');
+    } catch (e) {
+      developer.log('Error marking onboarding as shown: $e', name: 'TokenService', error: e);
+      rethrow;
+    }
+  }
+
+  // Check if onboarding has been shown
+  Future<bool> hasOnboardingBeenShown() async {
+    try {
+      final shown = await _storage.read(key: _onboardingShownKey);
+      return shown == 'true';
+    } catch (e) {
+      developer.log('Error checking onboarding status: $e', name: 'TokenService', error: e);
+      return false;
     }
   }
 

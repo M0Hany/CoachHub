@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 class NutritionPlan {
+  final int? id;
   final String title;
   final int duration;
   final List<NutritionDay> days;
 
   NutritionPlan({
+    this.id,
     required this.title,
     required this.duration,
     required this.days,

@@ -23,31 +23,31 @@ class _CoachChatRoomScreenState extends State<CoachChatRoomScreen> {
       'message': 'اهلا يا كابتن عايز اعرف خطة التدريب',
       'isMe': false,
       'time': '5:05 PM',
-      'imageUrl': 'assets/images/default_profile.png',
+      'imageUrl': 'assets/images/default_profile.jpg',
     },
     {
       'message': 'عايز اعرف وزنك وطولك',
       'isMe': true,
       'time': '5:05 PM',
-      'imageUrl': 'assets/images/default_profile.png',
+      'imageUrl': 'assets/images/default_profile.jpg',
     },
     {
       'message': 'الوزن ٨٥ والطول ١٧٥',
       'isMe': false,
       'time': '5:05 PM',
-      'imageUrl': 'assets/images/default_profile.png',
+      'imageUrl': 'assets/images/default_profile.jpg',
     },
     {
       'message': 'تمام هبعتلك خطة تدريب وتغذية تناسبك',
       'isMe': true,
       'time': '5:05 PM',
-      'imageUrl': 'assets/images/default_profile.png',
+      'imageUrl': 'assets/images/default_profile.jpg',
     },
     {
       'message': '...',
       'isMe': false,
       'time': '5:22 PM',
-      'imageUrl': 'assets/images/default_profile.png',
+      'imageUrl': 'assets/images/default_profile.jpg',
     },
   ];
 

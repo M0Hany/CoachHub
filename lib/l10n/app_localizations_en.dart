@@ -671,4 +671,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Retry';
+
+  @override
+  String get noTraineesSubscribed => 'No trainees are subscribed to you yet';
 }

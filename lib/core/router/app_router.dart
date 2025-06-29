@@ -8,10 +8,12 @@ import '../../features/auth/presentation/screens/complete_profile_screen.dart' h
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/models/user_model.dart';  // Import for UserType
+import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../core/services/token_service.dart';
 
 // Coach screens
-import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart';
-import '../../features/coach/presentation/screens/chat/coach_chats_screen.dart';
+import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart' as coach;
+import '../../features/coach/presentation/screens/chat/coach_chats_screen.dart' as coach;
 import '../../features/coach/presentation/screens/coach_notifications_screen.dart';
 import '../../features/coach/presentation/screens/home/coach_home_screen.dart';
 import '../../features/coach/presentation/screens/profile/coach_profile_screen.dart';
@@ -45,7 +47,7 @@ import 'dart:developer' as developer;
 import '../../features/auth/presentation/screens/onboarding/onboarding_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/splash',
   debugLogDiagnostics: true,
   errorBuilder: (context, state) {
     developer.log(
@@ -55,15 +57,30 @@ final GoRouter appRouter = GoRouter(
     );
     return const LoginScreen();
   },
-  redirect: (BuildContext context, GoRouterState state) {
+  redirect: (BuildContext context, GoRouterState state) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final tokenService = TokenService();
     final currentLocation = state.matchedLocation;
     final authStatus = authProvider.status;
+    final userType = authProvider.currentUser?.type;
 
     developer.log(
-      'Redirecting: Status=$authStatus, Location=$currentLocation',
+      'Redirecting: Status=$authStatus, Location=$currentLocation, UserType=$userType',
       name: 'Router',
     );
+
+    // If we're on the splash screen, let it handle its own redirections
+    if (currentLocation == '/splash') {
+      return null;
+    }
+
+    // If we're still in initial state or authenticating, redirect to splash
+    if (authStatus == AuthStatus.initial || 
+        authStatus == AuthStatus.authenticating || 
+        authProvider.isLoading) {
+      developer.log('Redirecting to splash: still in $authStatus state', name: 'Router');
+      return '/splash';
+    }
 
     // Public routes that don't require authentication
     final isPublicRoute = currentLocation == '/login' ||
@@ -76,12 +93,28 @@ final GoRouter appRouter = GoRouter(
         currentLocation == '/trainee-health-data' ||
         currentLocation == '/coach/expertise';
 
+    // Check onboarding status
+    final hasSeenOnboarding = await tokenService.hasOnboardingBeenShown();
+
     // Handle different auth states
     switch (authStatus) {
       case AuthStatus.authenticated:
+        // If we're on onboarding and haven't seen it yet, allow staying there
+        if (currentLocation == '/onboarding' && !hasSeenOnboarding) {
+          return null;
+        }
+        
+        // If we haven't seen onboarding and we're not on an auth flow route, go to onboarding
+        if (!hasSeenOnboarding && !isAuthFlowRoute && currentLocation != '/onboarding') {
+          return '/onboarding';
+        }
+
+        // If we're on a public route or auth flow route, redirect to home
         if (isPublicRoute || isAuthFlowRoute) {
-          final userRole = authProvider.userRole.toLowerCase();
-          return userRole == 'coach' ? '/coach/home' : '/trainee/home';
+          if (userType == null) {
+            return '/login';
+          }
+          return userType == UserType.coach ? '/coach/home' : '/trainee/home';
         }
         return null;
 
@@ -100,9 +133,8 @@ final GoRouter appRouter = GoRouter(
       case AuthStatus.profileIncomplete:
         // Allow access to expertise and health data screens during profile completion
         if (currentLocation == '/coach/expertise' || currentLocation == '/trainee-health-data') {
-          return null; // Allow these routes
+          return null;
         }
-        final userType = authProvider.currentUser?.type;
         if (userType == UserType.trainee) {
           return '/trainee-health-data';
         } else if (userType == UserType.coach) {
@@ -112,11 +144,7 @@ final GoRouter appRouter = GoRouter(
 
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
-        if (!isPublicRoute && currentLocation != '/login') {
-          return '/login';
-        }
-        return null;
-
+      case AuthStatus.initial:
       default:
         if (!isPublicRoute && !isAuthFlowRoute) {
           return '/login';
@@ -126,6 +154,10 @@ final GoRouter appRouter = GoRouter(
   },
   routes: [
     // Auth routes
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
@@ -174,7 +206,7 @@ final GoRouter appRouter = GoRouter(
             final chatId = state.pathParameters['id']!;
             return trainee.ChatScreen(
               name: chatId,
-              imageUrl: 'assets/images/default_profile.png',
+              imageUrl: 'assets/images/default_profile.jpg',
               lastSeen: 'Online',
             );
           },
@@ -215,10 +247,10 @@ final GoRouter appRouter = GoRouter(
           path: 'exercise-instruction/:exerciseName',
           builder: (context, state) {
             final exerciseName = state.pathParameters['exerciseName'] ?? '';
-            final animationPath = state.extra as String;
+            final extra = state.extra as Map<String, dynamic>;
             return ExerciseInstructionScreen(
               exerciseName: exerciseName,
-              animationPath: animationPath,
+              animationPath: extra['animationPath'] as String,
             );
           },
         ),
@@ -249,10 +281,17 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'plans/workout/calendar',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
+            print('Router: Building workout plan calendar screen with extra: ${state.extra}');
+            final Map<String, dynamic> extra = state.extra as Map<String, dynamic>? ?? {};
+            
+            // Parse planId as int with default value
+            final planId = extra['planId'] != null ? int.parse(extra['planId'].toString()) : -1;
+            final duration = extra['duration'] as int? ?? 7;
+            
+            print('Router: Parsed parameters - planId: $planId, duration: $duration');
             return WorkoutPlanCalendarScreen(
-              title: extra?['title'] ?? 'New Workout Plan',
-              duration: extra?['duration'] ?? 7,
+              planId: planId,
+              duration: duration,
             );
           },
         ),
@@ -265,9 +304,13 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'plans/workout/exercises',
           builder: (context, state) {
-            final muscleGroup = state.extra as String;
+            print('Router: Building exercise selection screen with extra: ${state.extra}');
+            final extra = state.extra as Map<String, dynamic>;
+            final dayNumber = extra['day_number'] as int;
+            final muscleGroup = extra['muscle_group'] as String;
+            print('Router: Parsed parameters - dayNumber: $dayNumber, muscleGroup: $muscleGroup');
             return ExerciseSelectionScreen(
-              dayNumber: 1,
+              dayNumber: dayNumber,
               muscleGroup: muscleGroup,
             );
           },
@@ -275,11 +318,11 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'plans/workout/exercise-details',
           builder: (context, state) {
-            final args = state.extra as Map<String, dynamic>;
+            final extra = state.extra as Map<String, dynamic>;
             return ExerciseDetailsFormScreen(
-              dayNumber: 1,
-              muscleGroup: args['muscleGroup'] as String,
-              exerciseData: args['exerciseData'] as ExerciseData,
+              dayNumber: extra['day_number'] as int,
+              muscleGroup: extra['muscle_group'] as String,
+              exerciseData: extra['exercise_data'] as ExerciseData,
             );
           },
         ),
@@ -297,14 +340,14 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: 'chats',
-          builder: (context, state) => const CoachChatsScreen(),
+          builder: (context, state) => const coach.CoachChatsScreen(),
         ),
         GoRoute(
           path: 'chat/:id',
           builder: (context, state) {
             final chatId = state.pathParameters['id']!;
             // Using mock data for chat details
-            return CoachChatRoomScreen(
+            return coach.CoachChatRoomScreen(
               traineeId: chatId,
             );
           },
@@ -326,7 +369,7 @@ final GoRouter appRouter = GoRouter(
               coachId: coachId,
               name: 'Coach Name',
               email: 'coach@example.com',
-              imageUrl: 'assets/images/default_profile.png',
+              imageUrl: 'assets/images/default_profile.jpg',
               rating: 4.5,
               expertiseFields: ['Weight Training', 'Cardio', 'Nutrition'],
             );
@@ -346,7 +389,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final args = state.extra as Map<String, dynamic>;
         return WorkoutPlanCalendarScreen(
-          title: args['title'] as String,
+          planId: args['planId'] as int,
           duration: args['duration'] as int,
         );
       },

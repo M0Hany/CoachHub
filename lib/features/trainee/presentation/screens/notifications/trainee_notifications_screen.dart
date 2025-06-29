@@ -23,7 +23,7 @@ class TraineeNotificationsScreen extends StatelessWidget {
             'name': 'Coach Walid',
             'message': l10n.checkedOffWorkout('Walid'),
             'time': l10n.notificationsJustNow,
-            'imageUrl': 'assets/images/default_profile.png',
+            'imageUrl': 'assets/images/default_profile.jpg',
           },
           {
             'name': 'CoachHub',

@@ -40,9 +40,9 @@ class UserModel {
 
     return UserModel(
       id: json['id'].toString(),
-      name: json['name'] as String,
+      name: json['full_name'] as String,
       email: json['email'] as String,
-      image: json['image'] as String?,
+      image: json['image_url'] as String?,
       bio: json['bio'] as String?,
       gender: Gender.values.firstWhere(
         (e) => e.toString().split('.').last.toLowerCase() == json['gender'].toString().toLowerCase(),
@@ -51,8 +51,12 @@ class UserModel {
       traineeData: type == UserType.trainee && json['trainee_data'] != null
           ? TraineeData.fromJson(json['trainee_data'])
           : null,
-      coachData: type == UserType.coach && json['coach_data'] != null
-          ? CoachData.fromJson(json['coach_data'])
+      coachData: type == UserType.coach && json['experiences'] != null
+          ? CoachData(
+              experienceIds: (json['experiences'] as List<dynamic>)
+                  .map((e) => (e['id'] as num).toInt())
+                  .toList(),
+            )
           : null,
     );
   }

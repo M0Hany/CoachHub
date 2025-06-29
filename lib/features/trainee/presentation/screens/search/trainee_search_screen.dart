@@ -20,37 +20,37 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
     {
       'id': '1',
       'name': 'Coach_Sameh',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 4.5,
     },
     {
       'id': '2',
       'name': 'walid_Adel_',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 5.0,
     },
     {
       'id': '3',
       'name': 'Shimaa_Ragab',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 4.5,
     },
     {
       'id': '4',
       'name': 'Coach_Mustafa',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 3.5,
     },
     {
       'id': '5',
       'name': 'Jessie_Elbaz',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 3.0,
     },
     {
       'id': '6',
       'name': 'Islam_AbuAuf',
-      'image': 'assets/images/default_profile.png',
+      'image': 'assets/images/default_profile.jpg',
       'rating': 3.0,
     },
   ];

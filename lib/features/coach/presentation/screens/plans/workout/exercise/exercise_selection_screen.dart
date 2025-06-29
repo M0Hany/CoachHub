@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../../../../core/theme/app_theme.dart';
 import '../../../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../../../core/constants/enums.dart';
+import '../../../../../../../core/network/http_client.dart';
 import '../../../../providers/workout/workout_plan_provider.dart';
 import '../../../../../data/models/workout/workout_plan_model.dart';
 import 'package:go_router/go_router.dart';
@@ -13,10 +14,11 @@ import 'exercise_details_form_screen.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 
 class ExerciseData {
+  final int id;
   final String name;
-  final String animationPath;
+  final String? animationPath;
 
-  ExerciseData({required this.name, required this.animationPath});
+  ExerciseData({required this.id, required this.name, this.animationPath});
 }
 
 class ExerciseSelectionScreen extends StatefulWidget {
@@ -37,27 +39,37 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late final int _totalPages;
-
-  // Mock data repeated 4 times to get 12 exercises
-  final exercises = List.generate(4, (index) => [
-    {
-      'name': 'Upper cable crossover',
-      'animation': 'assets/animations/workout1.json',
-    },
-    {
-      'name': 'Middle cable crossover',
-      'animation': 'assets/animations/workout2.json',
-    },
-    {
-      'name': 'Lower cable crossover',
-      'animation': 'assets/animations/workout3.json',
-    },
-  ]).expand((x) => x).toList();
+  bool _isLoading = true;
+  String? _error;
+  List<Map<String, dynamic>> _exercises = [];
 
   @override
   void initState() {
     super.initState();
-    _totalPages = (exercises.length / 6).ceil();
+    _loadExercises();
+  }
+
+  Future<void> _loadExercises() async {
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.get<Map<String, dynamic>>(
+        '/api/plans/workout/exercises',
+        queryParameters: {'muscle': widget.muscleGroup},
+      );
+
+      if (response.data?['status'] == 'success') {
+        setState(() {
+          _exercises = List<Map<String, dynamic>>.from(response.data!['data']['exercises']);
+          _totalPages = (_exercises.length / 6).ceil();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -66,22 +78,19 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
     super.dispose();
   }
 
-  Widget _buildExerciseCard(Map<String, String> exercise) {
+  Widget _buildExerciseCard(Map<String, dynamic> exercise) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ExerciseDetailsFormScreen(
-              dayNumber: widget.dayNumber,
-              muscleGroup: widget.muscleGroup,
-              exerciseData: ExerciseData(
-                name: exercise['name']!,
-                animationPath: exercise['animation']!,
-              ),
-            ),
+        print('ExerciseSelectionScreen: Navigating to exercise details with day ${widget.dayNumber} and muscle ${widget.muscleGroup}');
+        context.push('/coach/plans/workout/exercise-details', extra: {
+          'day_number': widget.dayNumber,
+          'muscle_group': widget.muscleGroup,
+          'exercise_data': ExerciseData(
+            id: exercise['id'],
+            name: exercise['title'],
+            animationPath: exercise['animation'],
           ),
-        );
+        });
       },
       child: Container(
         decoration: BoxDecoration(
@@ -100,10 +109,12 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Lottie.asset(
-                  exercise['animation']!,
-                  fit: BoxFit.contain,
-                ),
+                child: exercise['animation'] != null
+                    ? Lottie.network(
+                        exercise['animation'],
+                        fit: BoxFit.contain,
+                      )
+                    : const Icon(Icons.fitness_center, size: 50),
               ),
             ),
             Container(
@@ -121,7 +132,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      exercise['name']!,
+                      exercise['title'],
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -158,6 +169,38 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+          title: Text(
+            l10n.workout_plans_title,
+            style: AppTheme.bodyMedium,
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          elevation: 0,
+          title: Text(
+            l10n.workout_plans_title,
+            style: AppTheme.bodyMedium,
+          ),
+        ),
+        body: Center(
+          child: Text('Error: $_error'),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -170,7 +213,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Stack(
@@ -208,10 +251,10 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                           itemCount: 6,
                           itemBuilder: (context, index) {
                             final exerciseIndex = pageIndex * 6 + index;
-                            if (exerciseIndex >= exercises.length) {
+                            if (exerciseIndex >= _exercises.length) {
                               return const SizedBox.shrink();
                             }
-                            return _buildExerciseCard(exercises[exerciseIndex]);
+                            return _buildExerciseCard(_exercises[exerciseIndex]);
                           },
                         ),
                       );

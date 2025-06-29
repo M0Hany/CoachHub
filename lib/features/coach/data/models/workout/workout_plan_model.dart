@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 class WorkoutPlan {
+  final int? id;
   final String title;
   final int duration;
   final List<WorkoutDay> days;
 
   WorkoutPlan({
+    this.id,
     required this.title,
     required this.duration,
     required this.days,
@@ -33,6 +35,7 @@ class MuscleGroup {
 }
 
 class Exercise {
+  final int? id;
   final String name;
   final String? animationPath;
   final int sets;
@@ -42,6 +45,7 @@ class Exercise {
   final String? videoUrl;
 
   Exercise({
+    this.id,
     required this.name,
     this.animationPath,
     this.sets = 3,

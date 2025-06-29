@@ -1,16 +1,93 @@
 import 'package:flutter/foundation.dart';
 import '../../../data/models/nutrition/nutrition_plan_model.dart';
+import '../../../../../../core/network/http_client.dart';
 
 class NutritionPlanProvider extends ChangeNotifier {
   NutritionPlan? _nutritionPlan;
   List<NutritionPlan> _savedPlans = [];
   int _currentDayPage = 0;
   int? _selectedDayIndex;
+  bool _isLoading = false;
+  String? _error;
 
   NutritionPlan? get nutritionPlan => _nutritionPlan;
   List<NutritionPlan> get savedPlans => _savedPlans;
   int get currentDayPage => _currentDayPage;
   int? get selectedDayIndex => _selectedDayIndex;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  Future<void> fetchNutritionPlans() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.get<Map<String, dynamic>>(
+        '/api/plans/nutrition/my-plans',
+      );
+
+      if (response.data?['status'] == 'success') {
+        final plansData = response.data?['data']['nutrition_plans']['plans'] as List<dynamic>;
+        _savedPlans = plansData.map((plan) => NutritionPlan(
+          id: plan['id'],
+          title: plan['title'],
+          duration: plan['duration'],
+          days: (plan['days'] as List<dynamic>).map((day) => NutritionDay(
+            dayNumber: day['day_number'],
+            meals: [],
+            breakfast: day['breakfast'] ?? '',
+            lunch: day['lunch'] ?? '',
+            dinner: day['dinner'] ?? '',
+            snacks: day['snack'] ?? '',
+            note: day['notes'],
+          )).toList(),
+        )).toList();
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchNutritionPlanDetails(int planId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.get<Map<String, dynamic>>(
+        '/api/plans/nutrition/$planId',
+      );
+
+      if (response.data?['status'] == 'success') {
+        final planData = response.data?['data']['nutrition_plan'];
+        _nutritionPlan = NutritionPlan(
+          id: planData['id'],
+          title: planData['title'],
+          duration: planData['duration'],
+          days: (planData['days'] as List<dynamic>).map((day) => NutritionDay(
+            dayNumber: day['day_number'],
+            meals: [],
+            breakfast: day['breakfast'] ?? '',
+            lunch: day['lunch'] ?? '',
+            dinner: day['dinner'] ?? '',
+            snacks: day['snack'] ?? '',
+            note: day['notes'],
+          )).toList(),
+        );
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   void initializePlan(String title, int duration) {
     _nutritionPlan = NutritionPlan(
@@ -85,5 +162,74 @@ class NutritionPlanProvider extends ChangeNotifier {
   NutritionDay? getDayMeals(int dayIndex) {
     if (_nutritionPlan == null) return null;
     return _nutritionPlan!.days[dayIndex];
+  }
+
+  void setNutritionPlanId(int id) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await HttpClient().get<Map<String, dynamic>>(
+        '/api/plans/nutrition/$id',
+      );
+
+      if (response.data?['status'] == 'success') {
+        final planData = response.data?['data']['nutrition_plan'];
+        _nutritionPlan = NutritionPlan(
+          id: planData['id'],
+          title: planData['title'],
+          duration: planData['duration'],
+          days: (planData['days'] as List<dynamic>).map((day) => NutritionDay(
+            dayNumber: day['day_number'],
+            meals: [],
+            breakfast: day['breakfast'] ?? '',
+            lunch: day['lunch'] ?? '',
+            dinner: day['dinner'] ?? '',
+            snacks: day['snack'] ?? '',
+            note: day['notes'],
+          )).toList(),
+        );
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateNutritionPlan() async {
+    if (_nutritionPlan == null || _nutritionPlan!.id == null) return;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await HttpClient().put<Map<String, dynamic>>(
+        '/api/plans/nutrition/${_nutritionPlan!.id}',
+        data: {
+          'title': _nutritionPlan!.title,
+          'days': _nutritionPlan!.days.map((day) => {
+            'day_number': day.dayNumber,
+            'breakfast': day.breakfast,
+            'lunch': day.lunch,
+            'dinner': day.dinner,
+            'snack': day.snacks,
+            'notes': day.note,
+          }).toList(),
+        },
+      );
+
+      if (response.data?['status'] == 'success') {
+        // Plan updated successfully
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 } 

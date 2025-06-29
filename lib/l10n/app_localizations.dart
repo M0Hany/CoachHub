@@ -1366,6 +1366,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry'**
   String get retry;
+
+  /// No description provided for @noTraineesSubscribed.
+  ///
+  /// In en, this message translates to:
+  /// **'No trainees are subscribed to you yet'**
+  String get noTraineesSubscribed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

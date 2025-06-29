@@ -7,6 +7,9 @@ import '../../../../core/providers/language_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,14 +20,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -80,34 +83,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      final success = await authProvider.login(
-        _emailController.text,
+      final response = await authProvider.login(
+        _usernameController.text,
         _passwordController.text,
       );
 
       if (!mounted) return;
 
-      if (success) {
-        final userRole = authProvider.userRole;
-        if (userRole == 'coach') {
-          context.go('/coach/dashboard');
+      if (response) {
+        final userType = authProvider.currentUser?.type;
+        if (userType == UserType.coach) {
+          context.go('/coach/home');
         } else {
-          context.go('/trainee/dashboard');
+          context.go('/trainee/home');
         }
       } else {
-        // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
-              ),
-            );
+        final error = authProvider.error ?? 'Login failed. Please check your credentials.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Login error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text('An error occurred. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -183,18 +187,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 48),
                         Text(
-                          l10n.email,
+                          'Username',
                           style: AppTheme.bodyMedium.copyWith(
                             color: AppTheme.textLight,
                           ),
                         ),
                         const SizedBox(height: 8),
                         TextFormField(
-                          controller: _emailController,
+                          controller: _usernameController,
                           decoration: AppTheme.authInputDecoration.copyWith(
-                            hintText: l10n.enterEmail,
+                            hintText: 'Enter username',
                             prefixIcon: const Icon(
-                              Icons.email_outlined,
+                              Icons.person_outline,
                               color: Color(0xFF8E8E93),
                             ),
                           ),
@@ -202,13 +206,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: AppTheme.authInputText,
                             fontSize: 16,
                           ),
-                          keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return l10n.validation_required;
-                            }
-                            if (!value.contains('@')) {
-                              return l10n.validation_email;
                             }
                             return null;
                           },

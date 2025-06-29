@@ -39,7 +39,7 @@ class CoachProfileScreen extends StatelessWidget {
             children: [
               const CircleAvatar(
                 radius: 50,
-                    backgroundImage: AssetImage('assets/images/default_profile.png'),
+                    backgroundImage: AssetImage('assets/images/default_profile.jpg'),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -169,7 +169,7 @@ class CoachProfileScreen extends StatelessWidget {
                             const CircleAvatar(
                               radius: 20,
                               backgroundImage:
-                                  AssetImage('assets/images/default_profile.png'),
+                                  AssetImage('assets/images/default_profile.jpg'),
                             ),
                             const SizedBox(width: 8),
                             Column(

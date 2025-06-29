@@ -196,7 +196,7 @@ class _ExerciseDetailsFormScreenState extends State<ExerciseDetailsFormScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Stack(
@@ -253,8 +253,9 @@ class _ExerciseDetailsFormScreenState extends State<ExerciseDetailsFormScreen> {
                     onPressed: () {
                       final provider = context.read<WorkoutPlanProvider>();
                       final exercise = Exercise(
+                        id: widget.exerciseData.id,
                         name: widget.exerciseData.name,
-                        animationPath: '',
+                        animationPath: widget.exerciseData.animationPath ?? '',
                         sets: _sets,
                         reps: _reps,
                         restTime: _restTime,
@@ -262,23 +263,25 @@ class _ExerciseDetailsFormScreenState extends State<ExerciseDetailsFormScreen> {
                         videoUrl: _urlController.text.isEmpty ? null : _urlController.text,
                       );
 
-                      if (provider.selectedDayIndex != null) {
-                        provider.addExerciseToDay(
-                          provider.selectedDayIndex!,
-                          widget.muscleGroup,
-                          exercise,
-                        );
-
-                        // Pop back to the calendar screen
-                        context.go('/coach/plans/workout/calendar');
-                      } else {
-                        // Show error message if no day is selected
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a day first'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                      try {
+                        print('Adding exercise to day ${provider.selectedDayIndex} with muscle group ${widget.muscleGroup}');
+                        provider.addExerciseToDay(exercise, widget.muscleGroup);
+                        print('Successfully added exercise');
+                        
+                        // Navigate back to calendar
+                        if (mounted) {
+                          context.go('/coach/plans/workout/calendar', extra: {
+                            'planId': provider.workoutId,
+                            'duration': provider.workoutPlan?.duration ?? 7,
+                          });
+                        }
+                      } catch (e) {
+                        print('Error adding exercise: $e');
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error adding exercise: $e')),
+                          );
+                        }
                       }
                     },
                     text: l10n.workout_plans_apply,

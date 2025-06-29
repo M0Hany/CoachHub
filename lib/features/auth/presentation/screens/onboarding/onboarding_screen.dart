@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'first_onboarding_screen.dart';
 import 'second_onboarding_screen.dart';
 import 'third_onboarding_screen.dart';
+import '../../../../../core/services/token_service.dart';
+import 'dart:developer' as developer;
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,6 +15,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  final TokenService _tokenService = TokenService();
 
   void _onNext() {
     if (_pageController.page! < 2) {
@@ -21,12 +24,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/login');
+      _completeOnboarding();
     }
   }
 
   void _onSkip() {
-    context.go('/login');
+    _completeOnboarding();
+  }
+
+  Future<void> _completeOnboarding() async {
+    try {
+      await _tokenService.markOnboardingAsShown();
+      if (!mounted) return;
+      context.go('/login');
+    } catch (e) {
+      developer.log('Error completing onboarding: $e', name: 'OnboardingScreen', error: e);
+      // Still navigate to login even if saving the state fails
+      if (!mounted) return;
+      context.go('/login');
+    }
   }
 
   @override

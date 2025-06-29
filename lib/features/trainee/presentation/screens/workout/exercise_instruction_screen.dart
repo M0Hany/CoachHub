@@ -1,20 +1,101 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/network/http_client.dart';
 import 'dart:developer' as developer;
 import 'package:lottie/lottie.dart';
 import '../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
 
-class ExerciseInstructionScreen extends StatelessWidget {
+class ExerciseInstructionScreen extends StatefulWidget {
   final String exerciseName;
   final String animationPath;
+  final int? workoutId;
+  final int? dayNumber;
+  final int? exerciseId;
 
   const ExerciseInstructionScreen({
     super.key,
     required this.exerciseName,
     required this.animationPath,
+    this.workoutId,
+    this.dayNumber,
+    this.exerciseId,
   });
+
+  @override
+  State<ExerciseInstructionScreen> createState() => _ExerciseInstructionScreenState();
+}
+
+class _ExerciseInstructionScreenState extends State<ExerciseInstructionScreen> {
+  final _setsController = TextEditingController(text: '3');
+  final _repsController = TextEditingController(text: '12');
+  final _restTimeController = TextEditingController(text: '60');
+  final _notesController = TextEditingController();
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _setsController.dispose();
+    _repsController.dispose();
+    _restTimeController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveExercise() async {
+    if (_isSaving) return;
+
+    // If we don't have the required IDs, just pop back
+    if (widget.workoutId == null || widget.dayNumber == null || widget.exerciseId == null) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.put<Map<String, dynamic>>(
+        '/api/plans/workout/${widget.workoutId}',
+        data: {
+          'days': [
+            {
+              'day_number': widget.dayNumber,
+              'add_exercises': [
+                {
+                  'exercise_id': widget.exerciseId,
+                  'sets': int.parse(_setsController.text),
+                  'reps': int.parse(_repsController.text),
+                  'rest_time': int.parse(_restTimeController.text),
+                  'notes': _notesController.text,
+                  'video_url': null,
+                }
+              ],
+              'remove_exercise_ids': [],
+              'update_exercises': [],
+            }
+          ],
+        },
+      );
+
+      if (response.data?['status'] == 'success') {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving exercise: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +112,18 @@ class ExerciseInstructionScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : _saveExercise,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Save'),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -50,8 +143,13 @@ class ExerciseInstructionScreen extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Lottie.asset(
-                        animationPath,
+                      child: widget.animationPath.startsWith('http')
+                          ? Lottie.network(
+                              widget.animationPath,
+                              fit: BoxFit.contain,
+                            )
+                          : Lottie.asset(
+                              widget.animationPath,
                         fit: BoxFit.contain,
                       ),
                     ),
@@ -61,7 +159,7 @@ class ExerciseInstructionScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      exerciseName,
+                      widget.exerciseName,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -84,17 +182,17 @@ class ExerciseInstructionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0FF789),
+                        Expanded(
+                          child: TextField(
+                            controller: _setsController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFF0FF789),
+                              border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
                           ),
-                          child: Text(
-                            '3-4 sets',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -117,17 +215,17 @@ class ExerciseInstructionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0FF789),
+                        Expanded(
+                          child: TextField(
+                            controller: _repsController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFF0FF789),
+                              border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
                           ),
-                          child: Text(
-                            '10-15 reps',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -150,17 +248,18 @@ class ExerciseInstructionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0FF789),
+                        Expanded(
+                          child: TextField(
+                            controller: _restTimeController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: const Color(0xFF0FF789),
+                              border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
                           ),
-                          child: Text(
-                            '60-90 seconds',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              suffixText: 'seconds',
                             ),
                           ),
                         ),
@@ -189,11 +288,12 @@ class ExerciseInstructionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          l10n.exerciseNote,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
+                        TextField(
+                          controller: _notesController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: l10n.exerciseNote,
+                            border: InputBorder.none,
                           ),
                         ),
                       ],

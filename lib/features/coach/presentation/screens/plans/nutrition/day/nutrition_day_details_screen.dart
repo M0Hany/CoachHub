@@ -124,7 +124,7 @@ class _NutritionDayDetailsScreenState extends State<NutritionDayDetailsScreen> {
                       ),
                       const SizedBox(height: 32),
                       PrimaryButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (provider.selectedDayIndex != null) {
                             provider.updateDayMeals(
                               dayIndex: provider.selectedDayIndex!,
@@ -134,7 +134,22 @@ class _NutritionDayDetailsScreenState extends State<NutritionDayDetailsScreen> {
                               snacks: _snacksController.text,
                               note: _noteController.text.isEmpty ? null : _noteController.text,
                             );
-                            Navigator.pop(context);
+                            
+                            try {
+                              await provider.updateNutritionPlan();
+                              if (mounted) {
+                                Navigator.pop(context);
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error updating plan: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
