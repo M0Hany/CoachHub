@@ -10,6 +10,9 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/models/user_model.dart';  // Import for UserType
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../core/services/token_service.dart';
+import '../../features/auth/presentation/screens/reset/enter_email_reset_screen.dart';
+import '../../features/auth/presentation/screens/reset/otp_reset_screen.dart';
+import '../../features/auth/presentation/screens/reset/new_password_screen.dart';
 
 // Coach screens
 import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart' as coach;
@@ -28,6 +31,8 @@ import '../../features/coach/presentation/screens/plans/nutrition/calendar/nutri
 import '../../features/coach/presentation/screens/plans/nutrition/day/nutrition_day_details_screen.dart';
 import '../../features/trainee/presentation/screens/search/view_coach_profile_screen.dart';
 import '../../features/coach/presentation/screens/coach_expertise_screen.dart';
+import '../../features/coach/presentation/screens/coach_subscription_requests_screen.dart';
+import '../../features/coach/presentation/screens/view_trainee_profile_screen.dart';
 
 // Trainee screens
 import '../../features/trainee/presentation/screens/chat/trainee_chats_screen.dart' as trainee;
@@ -41,6 +46,8 @@ import '../../features/trainee/presentation/screens/workout/workout_plan_details
 import '../../features/trainee/presentation/screens/workout/exercise_details_screen.dart';
 import '../../features/trainee/presentation/screens/workout/exercise_instruction_screen.dart';
 import '../../features/trainee/presentation/screens/health/trainee_health_data_screen.dart';
+import '../../features/trainee/presentation/screens/nutrition/nutrition_plan_details_screen.dart';
+import '../../features/trainee/presentation/screens/nutrition/meal_details_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
@@ -62,7 +69,7 @@ final GoRouter appRouter = GoRouter(
     final tokenService = TokenService();
     final currentLocation = state.matchedLocation;
     final authStatus = authProvider.status;
-    final userType = authProvider.currentUser?.type;
+    final userType = authProvider.userType; // Use the getter instead of direct access
 
     developer.log(
       'Redirecting: Status=$authStatus, Location=$currentLocation, UserType=$userType',
@@ -83,6 +90,7 @@ final GoRouter appRouter = GoRouter(
     }
 
     // Public routes that don't require authentication
+    final isResetRoute = currentLocation.startsWith('/reset/');
     final isPublicRoute = currentLocation == '/login' ||
         currentLocation == '/register' ||
         currentLocation == '/onboarding';
@@ -103,19 +111,29 @@ final GoRouter appRouter = GoRouter(
         if (currentLocation == '/onboarding' && !hasSeenOnboarding) {
           return null;
         }
-        
-        // If we haven't seen onboarding and we're not on an auth flow route, go to onboarding
-        if (!hasSeenOnboarding && !isAuthFlowRoute && currentLocation != '/onboarding') {
-          return '/onboarding';
+
+        // If userType is null, redirect to login to re-authenticate
+        if (userType == null) {
+          developer.log('User type is null while authenticated, redirecting to login', name: 'Router');
+          return '/login';
         }
 
-        // If we're on a public route or auth flow route, redirect to home
-        if (isPublicRoute || isAuthFlowRoute) {
-          if (userType == null) {
-            return '/login';
+        // If we're on a public route or auth flow route (but not a reset route), redirect to home
+        if ((isPublicRoute || isAuthFlowRoute) && !isResetRoute) {
+          // If we haven't seen onboarding, go there first
+          if (!hasSeenOnboarding) {
+            return '/onboarding';
           }
           return userType == UserType.coach ? '/coach/home' : '/trainee/home';
         }
+
+        // Ensure coach users stay in coach routes and trainee users stay in trainee routes
+        if (userType == UserType.coach && currentLocation.startsWith('/trainee')) {
+          return '/coach/home';
+        } else if (userType == UserType.trainee && currentLocation.startsWith('/coach')) {
+          return '/trainee/home';
+        }
+        
         return null;
 
       case AuthStatus.requiresOtp:
@@ -178,6 +196,22 @@ final GoRouter appRouter = GoRouter(
       path: '/trainee-health-data',
       builder: (context, state) => const TraineeHealthDataScreen(),
     ),
+    GoRoute(
+      path: '/coach/expertise',
+      builder: (context, state) => const CoachExpertiseScreen(),
+    ),
+    GoRoute(
+      path: '/reset/email',
+      builder: (context, state) => const EnterEmailResetScreen(),
+    ),
+    GoRoute(
+      path: '/reset/otp_reset_screen',
+      builder: (context, state) => const OtpResetScreen(),
+    ),
+    GoRoute(
+      path: '/reset/new_password_screen',
+      builder: (context, state) => const NewPasswordScreen(),
+    ),
 
     // Trainee routes
     GoRoute(
@@ -224,35 +258,71 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const TraineeHealthDataScreen(),
         ),
         GoRoute(
-          path: 'workout-plan/:planTitle',
+          path: 'workout-plan-details',
           builder: (context, state) {
-            final planTitle = state.pathParameters['planTitle'] ?? '';
+            final extra = state.extra as Map<String, dynamic>?;
+            final planId = extra?['planId'] as int? ?? -1;
+            final duration = extra?['duration'] as int? ?? 7;
             return WorkoutPlanDetailsScreen(
-              planTitle: planTitle,
-              planDuration: 7, // Default duration
+              planId: planId,
+              duration: duration,
             );
           },
         ),
         GoRoute(
-          path: 'exercise/:muscleGroup',
+          path: 'workout-plan/:planId',
           builder: (context, state) {
-            final muscleGroup = state.pathParameters['muscleGroup'] ?? '';
+            final planId = int.tryParse(state.pathParameters['planId'] ?? '') ?? -1;
+            return WorkoutPlanDetailsScreen(
+              planId: planId,
+              duration: 7, // Default duration
+            );
+          },
+        ),
+        GoRoute(
+          path: 'workout/exercise-details',
+          builder: (context, state) {
+            final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
             return ExerciseDetailsScreen(
-              muscleGroup: muscleGroup,
-              exercises: _getExercisesForMuscleGroup(muscleGroup),
+              muscleGroup: extra['muscleGroup'] as String,
+              exercises: extra['exercises'] as List<ExerciseItem>,
+              dayId: extra['dayId'] as int,
+              workoutId: extra['workoutId'] as int,
             );
           },
         ),
         GoRoute(
-          path: 'exercise-instruction/:exerciseName',
+          path: 'workout/exercise-instruction',
           builder: (context, state) {
-            final exerciseName = state.pathParameters['exerciseName'] ?? '';
-            final extra = state.extra as Map<String, dynamic>;
+            final Map<String, dynamic> extra = state.extra as Map<String, dynamic>;
             return ExerciseInstructionScreen(
-              exerciseName: exerciseName,
-              animationPath: extra['animationPath'] as String,
+              exerciseName: extra['exerciseName'] as String,
+              animationPath: extra['animationPath'] as String?,
+              workoutId: extra['workoutId'] as int,
+              dayId: extra['dayId'] as int,
+              exerciseId: extra['exerciseId'] as int,
+              sets: extra['sets'] as int,
+              reps: extra['reps'] as int,
+              restTime: extra['restTime'] as int,
+              notes: extra['notes'] as String?,
+              videoUrl: extra['videoUrl'] as String?,
             );
           },
+        ),
+        GoRoute(
+          path: 'coach/:id',
+          builder: (context, state) {
+            final coachId = state.pathParameters['id']!;
+            return ViewCoachProfileScreen(coachId: coachId);
+          },
+        ),
+        GoRoute(
+          path: 'nutrition-plan-details',
+          builder: (context, state) => const NutritionPlanDetailsScreen(),
+        ),
+        GoRoute(
+          path: 'meal-details',
+          builder: (context, state) => const MealDetailsScreen(),
         ),
       ],
     ),
@@ -364,20 +434,23 @@ final GoRouter appRouter = GoRouter(
           path: 'coach/:id',
           builder: (context, state) {
             final coachId = state.pathParameters['id']!;
-            // Using mock data for now
-            return ViewCoachProfileScreen(
-              coachId: coachId,
-              name: 'Coach Name',
-              email: 'coach@example.com',
-              imageUrl: 'assets/images/default_profile.jpg',
-              rating: 4.5,
-              expertiseFields: ['Weight Training', 'Cardio', 'Nutrition'],
-            );
+            return ViewCoachProfileScreen(coachId: coachId);
           },
         ),
         GoRoute(
           path: 'expertise',
           builder: (context, state) => const CoachExpertiseScreen(),
+        ),
+        GoRoute(
+          path: 'subscription-requests',
+          builder: (context, state) => const CoachSubscriptionRequestsScreen(),
+        ),
+        GoRoute(
+          path: 'view-trainee/:id',
+          builder: (context, state) {
+            final traineeId = int.tryParse(state.pathParameters['id'] ?? '') ?? -1;
+            return ViewTraineeProfileScreen(traineeId: traineeId);
+          },
         ),
       ],
     ),
@@ -420,16 +493,24 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final dayNumber = int.parse(state.pathParameters['dayNumber'] ?? '1');
         final args = state.extra as Map<String, dynamic>;
-        return ExerciseDetailsFormScreen(
-          dayNumber: dayNumber,
-          muscleGroup: args['muscleGroup'] as String,
-          exerciseData: args['exerciseData'] as ExerciseData,
+        return ExerciseDetailsScreen(
+          muscleGroup: args['muscleGroup'] as String? ?? 'Default',
+          exercises: args['exercises'] as List<ExerciseItem>? ?? _getExercisesForMuscleGroup('Upper Chest'),
+          dayId: args['dayId'] as int? ?? dayNumber,
+          workoutId: args['workoutId'] as int? ?? 1,
         );
       },
     ),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/coach/view-trainee/:id',
+      builder: (context, state) {
+        final traineeId = int.tryParse(state.pathParameters['id'] ?? '') ?? -1;
+        return ViewTraineeProfileScreen(traineeId: traineeId);
+      },
     ),
   ],
 );
@@ -442,21 +523,45 @@ List<ExerciseItem> _getExercisesForMuscleGroup(String muscleGroup) {
         ExerciseItem(
           name: 'Incline Bench Press',
           animationPath: 'assets/animations/incline_bench_press.json',
+          id: 1,
+          sets: 3,
+          reps: 12,
+          restTime: 60,
+          notes: 'Keep your core tight',
+          videoUrl: 'https://example.com/incline-bench-press',
         ),
         ExerciseItem(
           name: 'Incline Dumbbell Press',
           animationPath: 'assets/animations/incline_dumbbell_press.json',
+          id: 2,
+          sets: 3,
+          reps: 10,
+          restTime: 90,
+          notes: 'Full range of motion',
+          videoUrl: 'https://example.com/incline-dumbbell-press',
         ),
       ];
-    case 'Triceps':
+    case 'Shoulder Front Delts':
       return [
         ExerciseItem(
-          name: 'Tricep Pushdown',
-          animationPath: 'assets/animations/tricep_pushdown.json',
+          name: 'Military Press',
+          animationPath: 'assets/animations/military_press.json',
+          id: 3,
+          sets: 4,
+          reps: 8,
+          restTime: 120,
+          notes: 'Keep your core engaged',
+          videoUrl: 'https://example.com/military-press',
         ),
         ExerciseItem(
-          name: 'Overhead Tricep Extension',
-          animationPath: 'assets/animations/overhead_tricep_extension.json',
+          name: 'Front Raises',
+          animationPath: 'assets/animations/front_raises.json',
+          id: 4,
+          sets: 3,
+          reps: 15,
+          restTime: 60,
+          notes: 'Control the movement',
+          videoUrl: 'https://example.com/front-raises',
         ),
       ];
     default:

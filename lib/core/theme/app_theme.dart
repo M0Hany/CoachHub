@@ -5,9 +5,11 @@ class AppTheme {
   static const mainBackgroundColor = Color(0xFFDDD6D6);
   static const primaryButtonColor = Color(0xFF0D122A);
   static const secondaryButtonColor = Color(0xFF0FF789);
+  static const accent = Color(0xFF0FF789);
+  static const primary = Color(0xFF0D122A);
   static const textLight = Colors.white;
-  static const textDark = Color(0xFF0D122A);
   static const labelColor = Color(0XFF555558);
+  static const textDark = Color(0xFF0D122A);
   static const success = Color(0xFF4CAF50);
   static const error = Color(0xFFE53935);
 
@@ -50,7 +52,14 @@ class AppTheme {
     fontFamily: 'ErasITCDemi',
     fontSize: 24,
     fontWeight: FontWeight.w600,
-    color: primaryButtonColor,
+    color: textDark,
+  );
+
+  static const headerSmall = TextStyle(
+    fontFamily: 'ErasITCDemi',
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: textDark,
   );
 
   static const screenTitle = TextStyle(

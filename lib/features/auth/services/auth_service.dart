@@ -93,6 +93,8 @@ class AuthService {
     double? weight,
     double? bodyFat,
     double? bodyMuscle,
+    String? hypertension,
+    String? diabetes,
   }) async {
     final formData = FormData.fromMap({
       'full_name': fullName,
@@ -111,6 +113,8 @@ class AuthService {
       if (weight != null) 'weight': weight,
       if (bodyFat != null) 'body_fat': bodyFat,
       if (bodyMuscle != null) 'body_muscle': bodyMuscle,
+      if (hypertension != null) 'hypertension': hypertension,
+      if (diabetes != null) 'diabetes': diabetes,
     });
 
     final response = await _httpClient.post<Map<String, dynamic>>(
@@ -123,7 +127,20 @@ class AuthService {
       ),
     );
 
-    return AuthResponseModel.fromJson(response.data!);
+    final authResponse = AuthResponseModel.fromJson(response.data!);
+    
+    // Save the new token if profile completion is successful
+    if (authResponse.success && authResponse.data?.token != null) {
+      developer.log('Saving new token after profile completion', name: 'AuthService');
+      await _tokenService.saveTokens(
+        token: authResponse.data!.token!,
+        refreshToken: null, // No refresh token at this stage
+      );
+    } else {
+      developer.log('No token received from profile completion', name: 'AuthService');
+    }
+
+    return authResponse;
   }
 
   // Sign in
@@ -175,7 +192,18 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
-    await _tokenService.clearTokens();
+    try {
+      // Clear all tokens
+      await _tokenService.clearTokens();
+      
+      // Clear any cached data if needed
+      // TODO: Clear any other cached data here
+      
+      developer.log('Successfully signed out and cleared tokens', name: 'AuthService');
+    } catch (e) {
+      developer.log('Error during sign out: $e', name: 'AuthService', error: e);
+      rethrow;
+    }
   }
 
   // Check authentication status
@@ -225,10 +253,26 @@ class AuthService {
       }
 
       try {
-        final user = UserModel.fromJson(userData);
+        // Create a new map with the profile data and add the trainee data at the root level
+        final Map<String, dynamic> userDataWithTraineeData = {
+          ...userData,
+          'trainee_data': {
+            'goals': userData['goals'] ?? [],
+            'weight': userData['weight'],
+            'height': userData['height'],
+            'body_fat': userData['body_fat'],
+            'body_muscle': userData['body_muscle'],
+            'age': userData['age'],
+          },
+        };
+
+        final user = UserModel.fromJson(userDataWithTraineeData);
         return AuthResponseModel(
           success: true,
-          data: AuthData(user: user),
+          data: AuthData(
+            user: user,
+            token: await _tokenService.getToken(), // Preserve the current token
+          ),
         );
       } catch (e) {
         developer.log('Error parsing user data: $e', name: 'AuthService', error: e);

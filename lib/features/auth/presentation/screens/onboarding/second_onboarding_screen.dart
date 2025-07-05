@@ -87,7 +87,7 @@ class SecondOnboardingScreen extends StatelessWidget {
                         child: Center(
                           child: Image.asset(
                             'assets/images/onboarding/phone_illustration.png',
-                            height: 400,
+                            height: 350,
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -96,8 +96,8 @@ class SecondOnboardingScreen extends StatelessWidget {
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            const SizedBox(height: 70),
                             Text(
                               l10n.onboardingLevelUpTitle,
                               textAlign: TextAlign.center,

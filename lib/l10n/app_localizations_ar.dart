@@ -149,6 +149,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logout => 'تسجيل الخروج';
 
   @override
+  String get logoutError => 'فشل تسجيل الخروج. يرجى المحاولة مرة أخرى.';
+
+  @override
   String get settingsTitle => 'الإعدادات';
 
   @override
@@ -674,4 +677,163 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noTraineesSubscribed => 'لا يوجد متدربين مشتركين معك حتى الآن';
+
+  @override
+  String get deletePlan => 'حذف الخطة';
+
+  @override
+  String get deletePlanConfirmation => 'هل أنت متأكد أنك تريد حذف هذه الخطة؟';
+
+  @override
+  String get delete => 'حذف';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get weightLabel => 'الوزن';
+
+  @override
+  String get heightLabel => 'الطول';
+
+  @override
+  String get fatsLabel => 'الدهون';
+
+  @override
+  String get muscleLabel => 'العضلات';
+
+  @override
+  String get searchForCoachesFields => 'البحث عن المدربين والمجالات..';
+
+  @override
+  String get noRecommendedCoaches => 'لا يوجد مدربين موصى بهم';
+
+  @override
+  String get subscribe => 'اشتراك';
+
+  @override
+  String get subscribeConfirmTitle => 'الاشتراك مع المدرب';
+
+  @override
+  String subscribeConfirmMessage(String coachName) {
+    return 'هل تريد إرسال طلب اشتراك إلى $coachName؟';
+  }
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String get subscribeSuccess => 'تم إرسال طلب الاشتراك بنجاح';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String get subscriptionRequestsTitle => 'طلبات الاشتراك';
+
+  @override
+  String get acceptRequest => 'قبول';
+
+  @override
+  String get rejectRequest => 'رفض';
+
+  @override
+  String get noSubscriptionRequests => 'لا توجد طلبات اشتراك حتى الآن';
+
+  @override
+  String get acceptSubscriptionConfirmTitle => 'قبول الاشتراك';
+
+  @override
+  String get rejectSubscriptionConfirmTitle => 'رفض الاشتراك';
+
+  @override
+  String acceptSubscriptionConfirmMessage(String traineeName) {
+    return 'هل أنت متأكد أنك تريد قبول طلب اشتراك $traineeName؟';
+  }
+
+  @override
+  String rejectSubscriptionConfirmMessage(String traineeName) {
+    return 'هل أنت متأكد أنك تريد رفض طلب اشتراك $traineeName؟';
+  }
+
+  @override
+  String get resetPassword => 'إعادة تعيين كلمة المرور';
+
+  @override
+  String get logoutConfirm => 'هل أنت متأكد أنك تريد تسجيل الخروج؟';
+
+  @override
+  String get healthConditionsTitle => 'هل لديك أي من هذه الأمراض؟';
+
+  @override
+  String get hypertension => 'ارتفاع ضغط الدم';
+
+  @override
+  String get diabetes => 'السكري';
+
+  @override
+  String get assignPlan => 'تعيين خطة';
+
+  @override
+  String get workoutPlanAssignedSuccessfully => 'تم تعيين خطة التمرين بنجاح';
+
+  @override
+  String get nutritionPlanAssignedSuccessfully => 'تم تعيين خطة التغذية بنجاح';
+
+  @override
+  String get forgotPasswordTitle => 'هل نسيت كلمة المرور؟';
+
+  @override
+  String get forgotPasswordSubtitle => 'لا تقلق، سنساعدك في إعادة تعيينها. يرجى إدخال بريدك الإلكتروني المسجل لإرسال رمز التأكيد';
+
+  @override
+  String get resetStepEmail => 'البريد الإلكتروني';
+
+  @override
+  String get resetStepOtp => 'رمز التحقق';
+
+  @override
+  String get resetStepNewPassword => 'كلمة مرور جديدة';
+
+  @override
+  String get resetEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get resetEmailHint => 'أدخل بريدك الإلكتروني';
+
+  @override
+  String get resetSendCode => 'إرسال الرمز';
+
+  @override
+  String get otpResetTitle => 'أدخل رمز التحقق';
+
+  @override
+  String get otpResetSubtitle => 'تم إرسال رمز مكون من 6 أرقام إلى بريدك الإلكتروني. يرجى إدخاله أدناه لإعادة تعيين كلمة المرور.';
+
+  @override
+  String get otpResetContinue => 'متابعة';
+
+  @override
+  String get newPasswordTitle => 'إنشاء كلمة مرور جديدة';
+
+  @override
+  String get newPasswordSubtitle => 'تأكد من أن كلمة المرور الجديدة قوية';
+
+  @override
+  String get newPasswordLabel => 'كلمة المرور الجديدة';
+
+  @override
+  String get newPasswordHint => 'أدخل كلمة المرور الجديدة';
+
+  @override
+  String get newPasswordConfirm => 'تأكيد';
+
+  @override
+  String get newPasswordSuccess => 'تمت إعادة تعيين كلمة المرور بنجاح';
+
+  @override
+  String get newPasswordError => 'فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get otpInvalid => 'رمز التحقق غير صحيح. حاول مرة أخرى.';
 }

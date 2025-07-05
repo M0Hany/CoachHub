@@ -65,9 +65,10 @@ class WorkoutPlanProvider extends ChangeNotifier {
   }
 
   Future<void> fetchWorkoutPlans() async {
-    _isLoading = true;
+    if (_isLoading) return; // Prevent multiple simultaneous fetches
+    
+    setLoading(true); // Use the existing method that handles notification
     _error = null;
-    notifyListeners();
 
     try {
       final response = await _httpClient.get<Map<String, dynamic>>(
@@ -89,8 +90,7 @@ class WorkoutPlanProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false); // Use the existing method that handles notification
     }
   }
 
@@ -361,6 +361,48 @@ class WorkoutPlanProvider extends ChangeNotifier {
   void clearError() {
     if (_error != null) {
       _error = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deletePlan(int planId) async {
+    print('WorkoutPlanProvider: deletePlan started for plan $planId');
+    
+    _error = null;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      print('WorkoutPlanProvider: Making HTTP request to delete plan $planId');
+      final response = await _httpClient.delete<Map<String, dynamic>>(
+        '/api/plans/workout/$planId',
+      );
+      print('WorkoutPlanProvider: Received API response:');
+      print(response.data);
+
+      if (response.data?['status'] == 'success') {
+        print('WorkoutPlanProvider: Plan deleted successfully');
+        // Remove the plan from saved plans if it exists
+        _savedPlans.removeWhere((plan) => plan.id == planId);
+        // Clear current plan if it was the deleted one
+        if (_workoutPlan?.id == planId) {
+          _workoutPlan = null;
+          _workoutId = null;
+          _selectedDayIndex = null;
+          _currentDayPage = 0;
+        }
+      } else {
+        print('WorkoutPlanProvider: Response status is not success');
+        throw Exception(response.data?['message'] ?? 'Failed to delete workout plan');
+      }
+    } catch (e) {
+      print('WorkoutPlanProvider: Error in deletePlan:');
+      print(e);
+      _error = e.toString();
+      rethrow;
+    } finally {
+      print('WorkoutPlanProvider: Setting loading state to false and notifying listeners');
+      _isLoading = false;
       notifyListeners();
     }
   }

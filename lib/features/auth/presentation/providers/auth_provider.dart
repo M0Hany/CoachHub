@@ -33,6 +33,7 @@ class AuthProvider extends ChangeNotifier {
   String? _token;
   String? _pendingEmail;
   String? _role;
+  UserType? _userType;
 
   // Temporary storage for profile completion
   String? _tempFullName;
@@ -51,44 +52,43 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  UserType? get userType => _currentUser?.type;
+  UserType? get userType => _userType;
   String? get token => _token;
   String get userRole => _currentUser?.type.toString().split('.').last ?? '';
   String? get pendingEmail => _pendingEmail;  // Add getter for email
 
-  void _updateState({
+  void updateAuthState({
     AuthStatus? status,
-    UserModel? user,
-    String? error,
+    UserType? userType,
     bool? isLoading,
+    String? error,
   }) {
-    bool hasChanges = false;
+    bool shouldNotify = false;
 
     if (status != null && status != _status) {
       _status = status;
-      hasChanges = true;
+      shouldNotify = true;
     }
 
-    if (user != _currentUser) {
-      _currentUser = user;
-      hasChanges = true;
-    }
-
-    if (error != _error) {
-      _error = error;
-      hasChanges = true;
+    // Only update userType if it's provided and different from current
+    if (userType != null && userType != _userType) {
+      _userType = userType;
+      shouldNotify = true;
     }
 
     if (isLoading != null && isLoading != _isLoading) {
       _isLoading = isLoading;
-      hasChanges = true;
+      shouldNotify = true;
     }
 
-    if (hasChanges) {
-      developer.log(
-        'Auth state updated - Status: $_status, User Type: ${_currentUser?.type}, IsLoading: $_isLoading',
-        name: 'AuthProvider'
-      );
+    if (error != null && error != _error) {
+      _error = error;
+      shouldNotify = true;
+    }
+
+    print('[AuthProvider] Auth state updated - Status: $_status, User Type: $_userType, IsLoading: $_isLoading');
+
+    if (shouldNotify) {
       notifyListeners();
     }
   }
@@ -96,54 +96,32 @@ class AuthProvider extends ChangeNotifier {
   // Check current authentication status
   Future<void> _checkAuthStatus() async {
     try {
-      _updateState(isLoading: true);
+      _isLoading = true;
+      notifyListeners();
+
       final isAuthenticated = await _authService.isAuthenticated();
-      
-      if (isAuthenticated) {
-        _updateState(status: AuthStatus.authenticating);
-        
-        // Fetch user profile if authenticated
-        final profileResponse = await _authService.fetchProfile();
-        
-        if (profileResponse.success && profileResponse.data?.user != null) {
-          _updateState(
-            status: AuthStatus.authenticated,
-            user: profileResponse.data!.user,
-            isLoading: false
-          );
-        } else {
-          // If profile fetch fails due to invalid token, clear auth state
-          if (profileResponse.error?.toLowerCase().contains('invalid') == true ||
-              profileResponse.error?.toLowerCase().contains('expired') == true) {
-            await _authService.signOut();
-            _updateState(
-              status: AuthStatus.unauthenticated,
-              user: null,
-              isLoading: false
-            );
-          } else {
-            _updateState(
-              status: AuthStatus.error,
-              error: profileResponse.error,
-              isLoading: false
-            );
-          }
-        }
+      if (!isAuthenticated) {
+        _status = AuthStatus.unauthenticated;
+        _userType = null;
       } else {
-        _updateState(
-          status: AuthStatus.unauthenticated,
-          user: null,
-          isLoading: false
-        );
+        // Get profile to determine user type
+        final profile = await _authService.fetchProfile();
+        if (profile.success && profile.data?.user != null) {
+          _userType = profile.data!.user!.type == UserType.coach ? UserType.coach : UserType.trainee;
+          _status = AuthStatus.authenticated;
+        } else {
+          // If we can't determine user type, treat as unauthenticated
+          _status = AuthStatus.unauthenticated;
+          _userType = null;
+        }
       }
     } catch (e) {
-      developer.log('Error checking auth status: $e', name: 'AuthProvider', error: e);
-      _updateState(
-        status: AuthStatus.error,
-        user: null,
-        error: e.toString(),
-        isLoading: false
-      );
+      _status = AuthStatus.unauthenticated;
+      _userType = null;
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -153,7 +131,7 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
     developer.log('Starting registration in AuthProvider', name: 'AuthProvider');
 
@@ -171,7 +149,7 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.success) {
         _pendingEmail = email;  // Store the email
-        _updateState(status: AuthStatus.requiresOtp);
+        updateAuthState(status: AuthStatus.requiresOtp);
         developer.log('Registration successful, status set to requiresOtp', name: 'AuthProvider');
         return true;
       } else {
@@ -184,13 +162,13 @@ class AuthProvider extends ChangeNotifier {
       developer.log('Registration error: $_error', name: 'AuthProvider', error: e);
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Verify OTP
   Future<bool> verifyOtp(String otp) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -206,7 +184,7 @@ class AuthProvider extends ChangeNotifier {
         }
         
         // After successful OTP verification, user needs to complete their profile
-        _updateState(status: AuthStatus.requiresProfileCompletion);
+        updateAuthState(status: AuthStatus.requiresProfileCompletion);
         return true;
       } else {
         _error = response.error ?? 'OTP verification failed';
@@ -217,7 +195,7 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
@@ -235,7 +213,7 @@ class AuthProvider extends ChangeNotifier {
       _tempUserType = type;
       _tempProfileImage = imageFile;
       _tempBio = bio;
-      _updateState(status: AuthStatus.profileIncomplete);
+      updateAuthState(status: AuthStatus.profileIncomplete, userType: type);
       notifyListeners();
       return true;
     } catch (e) {
@@ -246,7 +224,7 @@ class AuthProvider extends ChangeNotifier {
 
   // Complete profile for trainee with health data
   Future<bool> updateTraineeHealthData(TraineeHealthDataUpdateRequest request) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -262,10 +240,18 @@ class AuthProvider extends ChangeNotifier {
         weight: request.weight,
         bodyFat: request.fatPercentage,
         bodyMuscle: request.musclePercentage,
+        hypertension: request.hypertension != null ? (request.hypertension! ? 'true' : 'false') : null,
+        diabetes: request.diabetes != null ? (request.diabetes! ? 'true' : 'false') : null,
       );
 
       if (response.success) {
-        _updateState(status: AuthStatus.authenticated);
+        // Save the new token if it's provided in the response
+        if (response.data?.token != null) {
+          _token = response.data!.token;
+          developer.log('New token saved in AuthProvider after trainee health data: ${_token?.substring(0, 10)}...', name: 'AuthProvider');
+        }
+        
+        updateAuthState(status: AuthStatus.authenticated, userType: UserType.trainee);
         _currentUser = response.data?.user;
         // Clear temporary data
         _clearTempData();
@@ -278,13 +264,13 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Complete profile for coach with expertise
   Future<bool> updateCoachExpertise(CoachExpertiseUpdateRequest request) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -298,7 +284,13 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (response.success) {
-        _updateState(status: AuthStatus.authenticated);
+        // Save the new token if it's provided in the response
+        if (response.data?.token != null) {
+          _token = response.data!.token;
+          developer.log('New token saved in AuthProvider after coach expertise: ${_token?.substring(0, 10)}...', name: 'AuthProvider');
+        }
+        
+        updateAuthState(status: AuthStatus.authenticated, userType: UserType.coach);
         _currentUser = response.data?.user;
         // Clear temporary data
         _clearTempData();
@@ -311,7 +303,7 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
@@ -332,7 +324,7 @@ class AuthProvider extends ChangeNotifier {
     String? imageUrl,
     String? bio = '',  // Default empty string to handle nullable bio
   }) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -345,7 +337,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (response.success) {
-        _updateState(status: AuthStatus.profileIncomplete);  // Next step will be health data or expertise
+        updateAuthState(status: AuthStatus.profileIncomplete);  // Next step will be health data or expertise
         _currentUser = response.data?.user;
         return true;
       } else {
@@ -356,13 +348,13 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Sign in
   Future<bool> login(String username, String password) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -388,37 +380,39 @@ class AuthProvider extends ChangeNotifier {
             // Fetch user profile
             final profileResponse = await _authService.fetchProfile();
             if (profileResponse.success && profileResponse.data?.user != null) {
-              _currentUser = profileResponse.data!.user;
-              _updateState(
-                status: AuthStatus.authenticated,
-                user: profileResponse.data!.user,
-                isLoading: false
+              // Update state in a single call to avoid race conditions
+                              _currentUser = profileResponse.data!.user;
+                updateAuthState(
+                  status: AuthStatus.authenticated,
+                  userType: profileResponse.data!.user!.type,
+                  isLoading: false,
+                  error: null
               );
               return true;
             }
           }
         }
         _error = 'Invalid token format';
-        _updateState(status: AuthStatus.error);
+        updateAuthState(status: AuthStatus.error, error: _error);
         return false;
       } else {
         _error = response.error ?? 'Sign in failed';
-        _updateState(status: AuthStatus.error);
+        updateAuthState(status: AuthStatus.error, error: _error);
         return false;
       }
     } catch (e) {
       developer.log('Login error: $e', name: 'AuthProvider', error: e);
       _error = e.toString();
-      _updateState(status: AuthStatus.error);
+      updateAuthState(status: AuthStatus.error, error: _error);
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Request password reset
   Future<bool> requestPasswordReset(String email) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -435,13 +429,13 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Reset password
   Future<bool> resetPassword(String password) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -458,25 +452,30 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
   // Sign out
   Future<void> logout() async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     try {
       await _authService.signOut();
-      _updateState(
+      _currentUser = null;
+      _token = null;
+      _role = null;
+      updateAuthState(
         status: AuthStatus.unauthenticated,
-        user: null,
+        userType: null,
         isLoading: false
       );
     } catch (e) {
       developer.log('Logout error: $e', name: 'AuthProvider', error: e);
       _error = e.toString();
+      rethrow;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -500,7 +499,7 @@ class AuthProvider extends ChangeNotifier {
     required UserType type,
     required String bio,
   }) async {
-    _updateState(isLoading: true);
+    _isLoading = true;
     _error = null;
 
     try {
@@ -513,7 +512,7 @@ class AuthProvider extends ChangeNotifier {
       );
       
       if (response.success) {
-        _updateState(status: AuthStatus.requiresProfileCompletion);
+        updateAuthState(status: AuthStatus.requiresProfileCompletion);
         _currentUser = response.data?.user;
         return true;
       } else {
@@ -524,7 +523,7 @@ class AuthProvider extends ChangeNotifier {
       _error = e.toString();
       return false;
     } finally {
-      _updateState(isLoading: false);
+      _isLoading = false;
     }
   }
 
@@ -547,13 +546,31 @@ class AuthProvider extends ChangeNotifier {
 
   // Reset error state
   void resetError() {
-    _updateState(error: null);
+    updateAuthState(error: null);
   }
 
   // Refresh user profile
   Future<void> refreshProfile() async {
     if (isAuthenticated) {
-      await refreshAuthState();
+      try {
+        _isLoading = true;
+        notifyListeners();
+
+        final profileResponse = await _authService.fetchProfile();
+        if (profileResponse.success && profileResponse.data?.user != null) {
+          _currentUser = profileResponse.data!.user;
+          _userType = profileResponse.data!.user!.type;
+          _error = null;
+        } else {
+          _error = profileResponse.error ?? 'Failed to fetch profile';
+        }
+      } catch (e) {
+        developer.log('Error refreshing profile: $e', name: 'AuthProvider', error: e);
+        _error = e.toString();
+      } finally {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 }

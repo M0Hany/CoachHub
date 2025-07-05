@@ -17,6 +17,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -33,12 +34,50 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     });
     
     _controller.forward();
+
+    // Set up auth state listener
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      authProvider.addListener(_handleAuthStateChange);
+    });
   }
 
   @override
   void dispose() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.removeListener(_handleAuthStateChange);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _handleAuthStateChange() {
+    if (!mounted || _hasNavigated) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final status = authProvider.status;
+    final userType = authProvider.userType;
+
+    developer.log(
+      'Splash Screen - Auth Status: $status, User Type: $userType',
+      name: 'SplashScreen'
+    );
+
+    if (status == AuthStatus.authenticated && userType != null) {
+      _hasNavigated = true;
+      // Navigate based on user type
+      switch (userType) {
+        case UserType.coach:
+          context.go('/coach/home');
+          break;
+        case UserType.trainee:
+          context.go('/trainee/home');
+          break;
+      }
+    } else if (status == AuthStatus.unauthenticated || status == AuthStatus.error) {
+      _hasNavigated = true;
+      // If authentication fails or there's an error, go to login
+      context.go('/login');
+    }
   }
 
   Future<void> _initializeApp() async {
@@ -55,34 +94,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        // Listen to auth status changes
-        authProvider.addListener(() {
-          if (!mounted) return;
-
-          final status = authProvider.status;
-          final userType = authProvider.userType;
-
-          developer.log(
-            'Splash Screen - Auth Status: $status, User Type: $userType',
-            name: 'SplashScreen'
-          );
-
-          if (status == AuthStatus.authenticated && userType != null) {
-            // Navigate based on user type
-            switch (userType) {
-              case UserType.coach:
-                context.go('/coach/home');
-                break;
-              case UserType.trainee:
-                context.go('/trainee/home');
-                break;
-            }
-          } else if (status == AuthStatus.unauthenticated || status == AuthStatus.error) {
-            // If authentication fails or there's an error, go to login
-            context.go('/login');
-          }
-        });
-
         return Scaffold(
           backgroundColor: Colors.white,
           body: Stack(

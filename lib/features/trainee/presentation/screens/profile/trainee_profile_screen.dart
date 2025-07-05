@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../../features/auth/models/user_model.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/enums.dart';
@@ -29,13 +30,18 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
     });
   }
 
+  String _formatGoals(List<Goal>? goals) {
+    if (goals == null || goals.isEmpty) return 'Not set';
+    return goals.map((goal) => goal.name).join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final trainee = context.watch<AuthProvider>().currentUser;
     final l10n = AppLocalizations.of(context)!;
 
     developer.log('Building TraineeProfileScreen');
-    developer.log('Profile Image URL: ${trainee?.image}',
+    developer.log('Profile Image URL: ${trainee?.imageUrl}',
         name: 'TraineeProfileScreen');
     developer.log('Weight: ${trainee?.traineeData?.weight}',
         name: 'TraineeProfileScreen');
@@ -45,7 +51,7 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
         name: 'TraineeProfileScreen');
     developer.log('Body Muscle: ${trainee?.traineeData?.bodyMuscle}',
         name: 'TraineeProfileScreen');
-    developer.log('Goals: ${trainee?.traineeData?.goalIds}',
+    developer.log('Goals: ${trainee?.traineeData?.goals?.map((g) => g.name).join(", ")}',
         name: 'TraineeProfileScreen');
 
     if (context.watch<AuthProvider>().isLoading) {
@@ -97,9 +103,9 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Profile',
-                          style: TextStyle(
+                        Text(
+                          l10n.profile,
+                          style: const TextStyle(
                             fontFamily: 'ErasITCDemi',
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
@@ -107,10 +113,10 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
-                            Icons.settings,
-                            color: TraineeProfileScreen._navyColor,
-                            size: 24,
+                          icon: Image.asset(
+                            'assets/icons/navigation/Settings.png',
+                            width: 28,
+                            height: 28,
                           ),
                           onPressed: () => context.go('/trainee/settings'),
                         ),
@@ -129,20 +135,7 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                                 width: 2,
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.grey[200],
-                              backgroundImage: trainee?.image != null &&
-                                      trainee!.image!.isNotEmpty
-                                  ? FileImage(File(trainee.image!))
-                                  : null,
-                              child: trainee?.image == null ||
-                                      trainee!.image!.isEmpty
-                                  ? const Icon(Icons.person,
-                                      size: 50,
-                                      color: TraineeProfileScreen._navyColor)
-                                  : null,
-                            ),
+                            child: _buildProfileImage(trainee),
                           ),
                           Positioned(
                             bottom: 0,
@@ -185,9 +178,9 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                'Personal info',
-                                style: TextStyle(
+                              Text(
+                                l10n.personalInfo,
+                                style: const TextStyle(
                                   fontFamily: 'ErasITCDemi',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -198,9 +191,9 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                                 onPressed: () {
                                   // TODO: Implement edit functionality
                                 },
-                                child: const Text(
-                                  'Edit',
-                                  style: TextStyle(
+                                child: Text(
+                                  l10n.edit,
+                                  style: const TextStyle(
                                     color: TraineeProfileScreen._accentGreen,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -211,125 +204,26 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                           const SizedBox(height: 16),
                           InfoRow(
                             icon: Icons.person_outline,
-                            label: 'Name',
-                            value: trainee?.name?.isNotEmpty == true
-                                ? trainee!.name!
-                                : 'Not set',
+                            label: l10n.name,
+                            value: trainee?.fullName ?? 'Not set',
                           ),
                           const SizedBox(height: 12),
                           InfoRow(
                             icon: Icons.email_outlined,
-                            label: 'Email',
+                            label: l10n.emailLabel,
                             value: trainee?.email ?? 'Not set',
                           ),
                           const SizedBox(height: 12),
                           InfoRow(
                             icon: Icons.male,
-                            label: 'Gender',
-                            value: trainee?.gender?.toString().split('.').last ??
-                                'Not set',
+                            label: l10n.gender,
+                            value: trainee?.gender?.toString().split('.').last ?? 'Not set',
                           ),
                           const SizedBox(height: 12),
                           InfoRow(
                             icon: Icons.star_outline,
-                            label: 'Goals',
-                            value:
-                                trainee?.traineeData?.goalIds?.join(', ') ?? 'Not set',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Dashboard Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Dashboard',
-                            style: TextStyle(
-                              fontFamily: 'ErasITCDemi',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: TraineeProfileScreen._navyColor,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                DashboardMetric(
-                                  icon: Image.asset(
-                                    'assets/icons/Weight.png',
-                                    width: 24,
-                                    height: 24,
-                                    color: Colors.black,
-                                  ),
-                                  value: trainee?.traineeData?.weight != null
-                                      ? trainee!.traineeData!.weight!.toStringAsFixed(1)
-                                      : '0',
-                                  unit: 'kg',
-                                  label: 'Weight',
-                                ),
-                                const SizedBox(width: 16),
-                                DashboardMetric(
-                                  icon: Image.asset(
-                                    'assets/icons/Height.png',
-                                    width: 24,
-                                    height: 24,
-                                    color: Colors.black,
-                                  ),
-                                  value: trainee?.traineeData?.height != null
-                                      ? trainee!.traineeData!.height!.toStringAsFixed(1)
-                                      : '0',
-                                  unit: 'cm',
-                                  label: 'Height',
-                                ),
-                                const SizedBox(width: 16),
-                                DashboardMetric(
-                                  icon: Image.asset(
-                                    'assets/icons/Fats.png',
-                                    width: 24,
-                                    height: 24,
-                                    color: Colors.black,
-                                  ),
-                                  value: trainee?.traineeData?.bodyFat != null
-                                      ? trainee!.traineeData!.bodyFat!.toStringAsFixed(1)
-                                      : '0',
-                                  unit: l10n.percentSymbol,
-                                  label: 'Fats',
-                                ),
-                                const SizedBox(width: 16),
-                                DashboardMetric(
-                                  icon: Image.asset(
-                                    'assets/icons/Muscle.png',
-                                    width: 24,
-                                    height: 24,
-                                    color: Colors.black,
-                                  ),
-                                  value: trainee?.traineeData?.bodyMuscle != null
-                                      ? trainee!.traineeData!.bodyMuscle!.toStringAsFixed(1)
-                                      : '0',
-                                  unit: l10n.percentSymbol,
-                                  label: l10n.muscles,
-                                ),
-                              ],
-                            ),
+                            label: l10n.fitnessGoals,
+                            value: _formatGoals(trainee?.traineeData?.goals),
                           ),
                         ],
                       ),
@@ -349,6 +243,22 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileImage(UserModel? trainee) {
+    String? imageUrl = trainee?.imageUrl;
+    String? fullUrl = (imageUrl != null && imageUrl.isNotEmpty)
+        ? (imageUrl.startsWith('http') ? imageUrl : 'https://coachhub-production.up.railway.app/$imageUrl')
+        : null;
+    return CircleAvatar(
+      radius: 48,
+      backgroundImage: fullUrl != null
+          ? NetworkImage(fullUrl)
+          : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
+      child: (fullUrl == null)
+          ? const Icon(Icons.person, size: 48, color: TraineeProfileScreen._navyColor)
+          : null,
     );
   }
 }

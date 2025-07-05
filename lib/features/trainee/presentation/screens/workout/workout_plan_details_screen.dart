@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/widgets/bottom_nav_bar.dart';
+import '../../../../../core/constants/enums.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:developer' as developer;
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/network/http_client.dart';
+import 'dart:math';
+import './exercise_details_screen.dart';
 
 class WorkoutPlanDetailsScreen extends StatefulWidget {
-  final String planTitle;
-  final int planDuration;
+  final int planId;
+  final int duration;
 
   const WorkoutPlanDetailsScreen({
     super.key,
-    required this.planTitle,
-    required this.planDuration,
+    required this.planId,
+    required this.duration,
   });
 
   @override
@@ -19,234 +25,438 @@ class WorkoutPlanDetailsScreen extends StatefulWidget {
 }
 
 class _WorkoutPlanDetailsScreenState extends State<WorkoutPlanDetailsScreen> {
-  int _selectedTabIndex = 0;
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+  late final int _totalPages;
+  Map<String, dynamic>? _workoutPlan;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _totalPages = (widget.duration / 5).ceil();
+    _loadWorkoutPlan();
+  }
+
+  Future<void> _loadWorkoutPlan() async {
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.get<Map<String, dynamic>>(
+        '/api/plans/workout/assigned',
+      );
+
+      if (response.data?['status'] == 'success') {
+        setState(() {
+          _workoutPlan = response.data!['data']['assigned_workout']['workout'];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = response.data?['message'] ?? 'Failed to load workout plan';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<ExerciseItem> _getExercisesForDay(List<dynamic> exercises) {
+    return exercises.map((exercise) {
+      final exerciseData = exercise['exercise'];
+      return ExerciseItem(
+        name: exerciseData['title'],
+        animationPath: exerciseData['animation'],
+        id: exerciseData['id'],
+        sets: exercise['sets'],
+        reps: exercise['reps'],
+        restTime: exercise['rest_time'],
+        notes: exercise['notes'],
+        videoUrl: exercise['video_url'],
+      );
+    }).toList();
+  }
+
+  void _handleDayTap(Map<String, dynamic> dayData) {
+    if (dayData['exercises']?.isEmpty ?? true) return;
+
+    final exercises = _getExercisesForDay(dayData['exercises']);
+    final dayNumber = dayData['day_number'];
+    final dayId = dayData['id'];
+    
+    context.go('/trainee/workout/exercise-details', extra: {
+      'dayNumber': dayNumber,
+      'dayId': dayId,
+      'workoutId': widget.planId,
+      'exercises': exercises,
+      'muscleGroup': 'Day $dayNumber',
+    });
+  }
+
+  // Helper method to get unique target muscles for a day
+  List<String> _getUniqueMusclesForDay(List<dynamic> exercises) {
+    final muscles = exercises
+        .map((exercise) => exercise['exercise']['target_muscle'] as String)
+        .toSet()
+        .toList();
+    return muscles;
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenHeight = MediaQuery.of(context).size.height;
     
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.plans),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+    // Calculate cell height based on screen size
+    final availableHeight = screenHeight - 
+        kToolbarHeight -  // AppBar
+        140 -            // Title section (including padding)
+        kBottomNavigationBarHeight - 
+        100 -           // Page indicator section
+        32;            // Extra padding
+    
+    final cellHeight = (availableHeight / 5).clamp(80.0, 100.0);  // Min 80, max 100
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.mainBackgroundColor,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_error!),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadWorkoutPlan,
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_workoutPlan == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text('Plan Not Found'),
+        ),
+        body: const Center(
+          child: Text('Could not find the workout plan'),
+        ),
+      );
+    }
+
+    final totalHeight = min(widget.duration, 5) * cellHeight;
+
+    return Scaffold(
+      backgroundColor: AppTheme.mainBackgroundColor,
+      appBar: AppBar(
+        title: Text(
+          l10n.plansTitle,
+          style: AppTheme.bodyMedium,
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Tabs for Workout/Nutrition plans
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Row(
+          SafeArea(
+            child: Column(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedTabIndex = 0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _selectedTabIndex == 0
-                            ? const Color(0xFF0FF789)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Text(
-                        l10n.workoutPlansTab,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedTabIndex = 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _selectedTabIndex == 1
-                            ? const Color(0xFF0FF789)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Text(
-                        l10n.nutritionPlansTab,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Plan title and duration
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  '${l10n.planTitlePrefix}${widget.planTitle}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  '${l10n.planDurationPrefix}${widget.planDuration}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Days list
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.planDuration,
-              itemBuilder: (context, index) {
-                final day = index + 1;
-                final exercises = _getExercisesForDay(day);
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey[300]!,
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: Row(
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                  child: Column(
                     children: [
-                      // Day number
-                      Container(
-                        width: 60,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Column(
-                          children: [
-                            Text(
-                              l10n.dayLabel,
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _workoutPlan!['title'],
+                              style: AppTheme.headerLarge.copyWith(
+                                color: AppTheme.textDark
                               ),
-                            ),
-                            Text(
-                              day.toString(),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // Exercises
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: exercises.map((exercise) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF0FF789),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  exercise,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )).toList(),
-                        ),
-                      ),
-
-                      // Show exercise button
-                      if (exercises.isNotEmpty)
-                        TextButton(
-                          onPressed: () {
-                            final muscleGroup = exercises[0];
-                            final encodedMuscleGroup = Uri.encodeComponent(muscleGroup);
-                            
-                            developer.log(
-                              '[NAVIGATION] Attempting navigation: '
-                              'from=WorkoutPlanDetailsScreen, '
-                              'original=$muscleGroup, '
-                              'encoded=$encodedMuscleGroup',
-                              name: 'Navigation',
-                            );
-
-                            context.push('/trainee/exercise/$encodedMuscleGroup');
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: const Color(0xFF0FF789),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.visible,
+                              softWrap: true,
                             ),
                           ),
-                          child: Text(
-                            l10n.showExercise,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 12,
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.planDurationPrefix,
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppTheme.labelColor,
                             ),
                           ),
-                        ),
+                          Text(
+                            '${widget.duration} ${l10n.workout_plans_days}',
+                            style: AppTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                );
-              },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: PageView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      controller: _pageController,
+                      onPageChanged: (page) => setState(() => _currentPage = page),
+                      itemCount: _totalPages,
+                      itemBuilder: (context, pageIndex) {
+                        return GestureDetector(
+                          onHorizontalDragEnd: (details) {
+                            final isRTL = Directionality.of(context) == TextDirection.rtl;
+                            final velocity = isRTL ? -details.primaryVelocity! : details.primaryVelocity!;
+                            
+                            if (velocity > 0 && _currentPage > 0) {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            } else if (velocity < 0 && _currentPage < _totalPages - 1) {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          },
+                          behavior: HitTestBehavior.translucent,
+                          child: Row(
+                            children: [
+                              // Days Column
+                              Container(
+                                width: 80,
+                                height: totalHeight,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  itemCount: 5,
+                                  itemBuilder: (context, i) {
+                                    final dayNumber = pageIndex * 5 + i + 1;
+                                    if (dayNumber > widget.duration) return const SizedBox.shrink();
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SizedBox(
+                                          height: cellHeight,
+                                          child: Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  l10n.workout_plans_day,
+                                                  style: AppTheme.bodyMedium.copyWith(
+                                                    color: AppTheme.labelColor,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  dayNumber.toString(),
+                                                  style: AppTheme.headerLarge.copyWith(
+                                                    color: AppColors.primary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        if (i < 4 && dayNumber < widget.duration)
+                                          const Divider(
+                                            height: 1,
+                                            thickness: 1,
+                                            color: AppColors.background,
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Exercises Column
+                              Expanded(
+                                child: Container(
+                                  height: totalHeight,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: ListView.builder(
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: 5,
+                                    itemBuilder: (context, i) {
+                                      final dayNumber = pageIndex * 5 + i + 1;
+                                      if (dayNumber > widget.duration) return const SizedBox.shrink();
+                                      
+                                      final dayData = _workoutPlan!['days'].firstWhere(
+                                        (day) => day['day_number'] == dayNumber,
+                                        orElse: () => {'exercises': []},
+                                      );
+                                      
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () => _handleDayTap(dayData),
+                                            child: SizedBox(
+                                              height: cellHeight,
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(16.0),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        children: [
+                                                          if (dayData['exercises']?.isNotEmpty ?? false)
+                                                            ..._getUniqueMusclesForDay(dayData['exercises']).map((muscle) {
+                                                              return Row(
+                                                                children: [
+                                                                  Container(
+                                                                    width: 8,
+                                                                    height: 8,
+                                                                    margin: const EdgeInsets.only(right: 8),
+                                                                    decoration: const BoxDecoration(
+                                                                      color: AppColors.accent,
+                                                                      shape: BoxShape.circle,
+                                                                    ),
+                                                                  ),
+                                                                  Text(
+                                                                    muscle,
+                                                                    style: AppTheme.headerMedium.copyWith(
+                                                                      fontSize: 14,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            }).toList(),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  if (dayData['exercises']?.isNotEmpty ?? false)
+                                                    const Padding(
+                                                      padding: EdgeInsets.only(right: 16.0),
+                                                      child: Icon(
+                                                        Icons.chevron_right,
+                                                        color: AppColors.primary,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          if (i < 4)
+                                            const Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                              color: AppColors.background,
+                                            ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed: _currentPage > 0
+                            ? () => _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              )
+                            : null,
+                        icon: const Icon(Icons.chevron_left),
+                        color: _currentPage > 0 && _totalPages > 1 ? AppColors.primary : Colors.grey,
+                      ),
+                      Text(
+                        '${_currentPage + 1}/$_totalPages',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      IconButton(
+                        onPressed: _currentPage < _totalPages - 1
+                            ? () => _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              )
+                            : null,
+                        icon: const Icon(Icons.chevron_right),
+                        color: _currentPage < _totalPages - 1 && _totalPages > 1 ? AppColors.primary : Colors.grey,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  List<String> _getExercisesForDay(int day) {
-    // This is mock data - in a real app, this would come from a database or API
-    switch (day) {
-      case 1:
-        return ['Upper Chest', 'Triceps'];
-      case 2:
-        return ['Biceps', 'Back'];
-      case 3:
-        return ['Legs', 'Shoulder Sidedelts'];
-      case 4:
-        return ['Rest'];
-      case 5:
-        return [];
-      default:
-        return [];
-    }
   }
 } 

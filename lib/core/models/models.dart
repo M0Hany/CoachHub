@@ -46,6 +46,8 @@ class TraineeHealthDataUpdateRequest {
   final double? fatPercentage;
   final double? musclePercentage;
   final int? age;
+  final bool? hypertension;
+  final bool? diabetes;
 
   TraineeHealthDataUpdateRequest({
     required this.goalIds,
@@ -54,6 +56,8 @@ class TraineeHealthDataUpdateRequest {
     this.fatPercentage,
     this.musclePercentage,
     this.age,
+    this.hypertension,
+    this.diabetes,
   });
 
   Map<String, dynamic> toJson() {
@@ -64,6 +68,8 @@ class TraineeHealthDataUpdateRequest {
       'fatPercentage': fatPercentage,
       'musclePercentage': musclePercentage,
       'age': age,
+      'hypertension': (hypertension ?? false) ? 'true' : 'false',
+      'diabetes': (diabetes ?? false) ? 'true' : 'false',
     };
   }
 } 

@@ -10,27 +10,57 @@ enum Gender {
   female,
 }
 
+class Experience {
+  final int id;
+  final String name;
+
+  Experience({
+    required this.id,
+    required this.name,
+  });
+
+  factory Experience.fromJson(Map<String, dynamic> json) {
+    return Experience(
+      id: json['id'] as int,
+      name: json['name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}
+
 class UserModel {
   final String id;
-  final String name;
+  final String fullName;
   final String email;
-  final String? image;
+  final String? imageUrl;
   final String? bio;
   final Gender gender;
   final UserType type;
+  final double? rating;
+  final List<Experience>? experiences;
+  final Map<String, dynamic>? recentPost;
+  final Map<String, dynamic>? recentReview;
   final TraineeData? traineeData;
-  final CoachData? coachData;
 
   UserModel({
     required this.id,
-    required this.name,
+    required this.fullName,
     required this.email,
-    this.image,
+    this.imageUrl,
     this.bio,
     required this.gender,
     required this.type,
+    this.rating,
+    this.experiences,
+    this.recentPost,
+    this.recentReview,
     this.traineeData,
-    this.coachData,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -40,23 +70,24 @@ class UserModel {
 
     return UserModel(
       id: json['id'].toString(),
-      name: json['full_name'] as String,
+      fullName: json['full_name'] as String,
       email: json['email'] as String,
-      image: json['image_url'] as String?,
+      imageUrl: json['image_url'] as String?,
       bio: json['bio'] as String?,
       gender: Gender.values.firstWhere(
         (e) => e.toString().split('.').last.toLowerCase() == json['gender'].toString().toLowerCase(),
       ),
       type: type,
-      traineeData: type == UserType.trainee && json['trainee_data'] != null
-          ? TraineeData.fromJson(json['trainee_data'])
+      rating: (json['rating'] as num?)?.toDouble(),
+      experiences: json['experiences'] != null
+          ? (json['experiences'] as List<dynamic>)
+              .map((e) => Experience.fromJson(e as Map<String, dynamic>))
+              .toList()
           : null,
-      coachData: type == UserType.coach && json['experiences'] != null
-          ? CoachData(
-              experienceIds: (json['experiences'] as List<dynamic>)
-                  .map((e) => (e['id'] as num).toInt())
-                  .toList(),
-            )
+      recentPost: json['recentPost'] != null ? json['recentPost'] as Map<String, dynamic> : null,
+      recentReview: json['recentReview'] != null ? json['recentReview'] as Map<String, dynamic> : null,
+      traineeData: type == UserType.trainee && json['trainee_data'] != null
+          ? TraineeData.fromJson(json['trainee_data'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -64,79 +95,129 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'full_name': fullName,
       'email': email,
-      'image': image,
+      'image_url': imageUrl,
       'bio': bio,
       'gender': gender.toString().split('.').last.toLowerCase(),
       'type': type.toString().split('.').last.toLowerCase(),
-      if (traineeData != null) 'trainee_data': traineeData!.toJson(),
-      if (coachData != null) 'coach_data': coachData!.toJson(),
+      'rating': rating,
+      'experiences': experiences?.map((e) => e.toJson()).toList(),
+      'recentPost': recentPost,
+      'recentReview': recentReview,
+      if (traineeData != null) ...{
+        'goals': traineeData!.goals.map((g) => g.toJson()).toList(),
+        'weight': traineeData!.weight,
+        'height': traineeData!.height,
+        'body_fat': traineeData!.bodyFat,
+        'body_muscle': traineeData!.bodyMuscle,
+        'age': traineeData!.age,
+      },
     };
   }
 
   // Create a copy with some fields updated
   UserModel copyWith({
     String? id,
-    String? name,
+    String? fullName,
     String? email,
-    String? image,
+    String? imageUrl,
     String? bio,
     Gender? gender,
     UserType? type,
+    double? rating,
+    List<Experience>? experiences,
+    Map<String, dynamic>? recentPost,
+    Map<String, dynamic>? recentReview,
     TraineeData? traineeData,
-    CoachData? coachData,
   }) {
     return UserModel(
       id: id ?? this.id,
-      name: name ?? this.name,
+      fullName: fullName ?? this.fullName,
       email: email ?? this.email,
-      image: image ?? this.image,
+      imageUrl: imageUrl ?? this.imageUrl,
       bio: bio ?? this.bio,
       gender: gender ?? this.gender,
       type: type ?? this.type,
+      rating: rating ?? this.rating,
+      experiences: experiences ?? this.experiences,
+      recentPost: recentPost ?? this.recentPost,
+      recentReview: recentReview ?? this.recentReview,
       traineeData: traineeData ?? this.traineeData,
-      coachData: coachData ?? this.coachData,
     );
   }
 }
 
 class TraineeData {
-  final List<int> goalIds;
+  final List<Goal> goals;
   final double? weight;
   final double? height;
   final double? bodyFat;
   final double? bodyMuscle;
   final int? age;
+  final bool? hypertension;
+  final bool? diabetes;
 
   TraineeData({
-    required this.goalIds,
+    required this.goals,
     this.weight,
     this.height,
     this.bodyFat,
     this.bodyMuscle,
     this.age,
+    this.hypertension,
+    this.diabetes,
   });
 
   factory TraineeData.fromJson(Map<String, dynamic> json) {
     return TraineeData(
-      goalIds: (json['goals'] as List<dynamic>).map((e) => int.parse(e.toString())).toList(),
-      weight: json['weight']?.toDouble(),
-      height: json['height']?.toDouble(),
-      bodyFat: json['body_fat']?.toDouble(),
-      bodyMuscle: json['body_muscle']?.toDouble(),
-      age: json['age'],
+      goals: (json['goals'] as List<dynamic>)
+          .map((e) => Goal.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      weight: (json['weight'] as num?)?.toDouble(),
+      height: (json['height'] as num?)?.toDouble(),
+      bodyFat: (json['body_fat'] as num?)?.toDouble(),
+      bodyMuscle: (json['body_muscle'] as num?)?.toDouble(),
+      age: json['age'] as int?,
+      hypertension: json['hypertension'] == null ? null : json['hypertension'].toString() == 'true',
+      diabetes: json['diabetes'] == null ? null : json['diabetes'].toString() == 'true',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'goals': goalIds.map((id) => id.toString()).toList(),
+      'goals': goals.map((goal) => goal.toJson()).toList(),
       'weight': weight,
       'height': height,
       'body_fat': bodyFat,
       'body_muscle': bodyMuscle,
       'age': age,
+      'hypertension': hypertension,
+      'diabetes': diabetes,
+    };
+  }
+}
+
+class Goal {
+  final int id;
+  final String name;
+
+  Goal({
+    required this.id,
+    required this.name,
+  });
+
+  factory Goal.fromJson(Map<String, dynamic> json) {
+    return Goal(
+      id: json['id'] as int,
+      name: json['name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
     };
   }
 }
@@ -159,4 +240,4 @@ class CoachData {
       'expertise': experienceIds.map((id) => id.toString()).toList(),
     };
   }
-} 
+}

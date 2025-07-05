@@ -29,6 +29,7 @@ dependencies:
   cached_network_image: ^3.2.3
   google_fonts: ^6.1.0
   flutter_svg: ^2.0.10
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -37,11 +38,13 @@ dev_dependencies:
   build_runner: ^2.4.6
   mockito: ^5.4.2
   intl_translation: ^0.20.1
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   generate: true
   uses-material-design: true
-  
+
+
   assets:
     - assets/images/
     - assets/images/logo/
@@ -49,17 +52,14 @@ flutter:
     - assets/icons/
     - assets/icons/features/
     - assets/fonts/
+    - assets/icons/navigation/
+    - assets/icons/reset/
     - assets/animations/
-    - assets/images/onboarding/phone_illustration.png
-    - assets/images/onboarding/stretching_person.png
-    - assets/icons/features/progress_tracking.png
-    - assets/icons/features/seamless_training.png
-    - assets/icons/features/nutrition_plan.png
-    
+
   fonts:
     - family: ErasITCDemi
       fonts:
         - asset: assets/fonts/eras-itc-demi.ttf
     - family: Alexandria
       fonts:
-        - asset: assets/fonts/Alexandria.ttf 
+        - asset: assets/fonts/Alexandria.ttf

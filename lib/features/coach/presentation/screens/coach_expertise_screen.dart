@@ -109,14 +109,24 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.yourExpertise),
-        backgroundColor: AppTheme.primaryButtonColor,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0D122A)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          l10n.yourExpertise,
+          style: AppTheme.headerMedium,
+        ),
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 24),
             Text(
               l10n.selectExpertiseAreas,
               style: const TextStyle(
@@ -138,8 +148,13 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
               runSpacing: 8.0,
               children: experienceFields.map((field) {
                 final isSelected = selectedExpertiseIds.contains(field.id);
-                return FilterChip(
-                  label: Text(field.name),
+                return ChoiceChip(
+                  label: Text(
+                    field.name,
+                    style: isSelected
+                        ? AppTheme.bodyMedium.copyWith(color: AppTheme.textLight)
+                        : AppTheme.bodyMedium.copyWith(color: AppTheme.primaryButtonColor),
+                  ),
                   selected: isSelected,
                   onSelected: (bool selected) {
                     setState(() {
@@ -154,57 +169,74 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
                       }
                     });
                   },
-                  backgroundColor: Colors.grey[200],
-                  selectedColor: AppTheme.secondaryButtonColor,
+                  backgroundColor: Colors.white,
+                  selectedColor: AppTheme.primaryButtonColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: AppTheme.primaryButtonColor, width: 1.5),
+                  ),
+                  showCheckmark: false,
+                  elevation: 0,
+                  pressElevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 );
               }).toList(),
             ),
             const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading || selectedExpertiseIds.length != requiredExpertiseCount
-                    ? null
-                    : () async {
-                        setState(() => _isLoading = true);
-                        try {
-                        final authProvider = context.read<AuthProvider>();
-                        final request = CoachExpertiseUpdateRequest(
-                            experienceIds: selectedExpertiseIds,
-                        );
-                          final success = await authProvider.updateCoachExpertise(request);
-                        if (success && context.mounted) {
-                          context.go('/coach/profile');
-                          } else if (context.mounted) {
-                            _showErrorSnackBar(authProvider.error ?? 'Failed to update expertise');
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryButtonColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        selectedExpertiseIds.length == requiredExpertiseCount
-                            ? l10n.continueAction
-                            : '${selectedExpertiseIds.length}/3 Selected',
-                      ),
+            const SizedBox(height: 80), // for bottom button spacing
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _isLoading || selectedExpertiseIds.length != requiredExpertiseCount
+                ? null
+                : () async {
+                    setState(() => _isLoading = true);
+                    try {
+                      final authProvider = context.read<AuthProvider>();
+                      final request = CoachExpertiseUpdateRequest(
+                        experienceIds: selectedExpertiseIds,
+                      );
+                      final success = await authProvider.updateCoachExpertise(request);
+                      if (success && context.mounted) {
+                        context.go('/coach/profile');
+                      } else if (context.mounted) {
+                        _showErrorSnackBar(authProvider.error ?? 'Failed to update expertise');
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isLoading = false);
+                      }
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryButtonColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-          ],
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'Next',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
         ),
       ),
     );

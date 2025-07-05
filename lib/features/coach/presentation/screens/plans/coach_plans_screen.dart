@@ -19,12 +19,21 @@ class CoachPlansScreen extends StatefulWidget {
 
 class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _fetchPlans();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      _fetchPlans();
+    }
   }
 
   Future<void> _fetchPlans() async {
@@ -43,91 +52,104 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Consumer<WorkoutPlanProvider>(
       builder: (context, workoutProvider, child) {
         return GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
           child: Scaffold(
-            backgroundColor: AppTheme.mainBackgroundColor, // Light gray background
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              title: Text(
-                l10n.plansTitle,
-                style: AppTheme.bodyMedium,
-              ),
-              centerTitle: true,
-            ),
-            body: Column(
+            backgroundColor: AppTheme.mainBackgroundColor,
+            body: Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
-                  child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                Column(
+                  children: [
+                    AppBar(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      title: Text(
+                        l10n.plansTitle,
+                        style: AppTheme.bodyMedium,
+                      ),
+                      centerTitle: true,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+                      child: Container(
+                        height: 45,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ],
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: const UnderlineTabIndicator(
+                            borderSide: BorderSide(width: 3.0, color: AppColors.accent),
+                            insets: EdgeInsets.symmetric(horizontal: -24),
+                          ),
+                          indicatorColor: Colors.transparent,
+                          labelColor: AppColors.textDark,
+                          unselectedLabelColor: AppColors.textDark.withOpacity(0.6),
+                          tabs: [
+                            Tab(text: l10n.workoutPlans),
+                            Tab(text: l10n.nutritionPlans),
+                          ],
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          dividerColor: Colors.transparent,
+                        ),
+                      ),
                     ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: const UnderlineTabIndicator(
-                        borderSide: BorderSide(width: 3.0, color: AppColors.accent), // custom underline color
-                        insets: EdgeInsets.symmetric(horizontal: -24),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildWorkoutPlansTab(),
+                          _buildNutritionPlansTab(),
+                        ],
                       ),
-                      indicatorColor: Colors.transparent,
-                      labelColor: AppColors.textDark,
-                      unselectedLabelColor: AppColors.textDark.withOpacity(0.6),
-                      tabs: [
-                        Tab(text: l10n.workoutPlans),
-                        Tab(text: l10n.nutritionPlans),
-                      ],
-                      labelStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      dividerColor: Colors.transparent,
                     ),
-                  ),
+                  ],
                 ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildWorkoutPlansTab(),
-                      _buildNutritionPlansTab(),
-                    ],
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: BottomNavBar(
+                    role: UserRole.coach,
+                    currentIndex: 0, // Plans tab
                   ),
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                if (_tabController.index == 0) {
-                  context.push('/coach/plans/create-workout');
-                } else {
-                  context.push('/coach/plans/create-nutrition');
-                }
-              },
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add, color: AppColors.textLight),
-            ),
-            bottomNavigationBar: const BottomNavBar(
-              role: UserRole.coach,
-              currentIndex: 0, // Plans tab
+            floatingActionButton: Padding(
+              padding: EdgeInsets.only(bottom: kBottomNavigationBarHeight - bottomPadding + 40),
+              child: FloatingActionButton(
+                onPressed: () {
+                  if (_tabController.index == 0) {
+                    context.push('/coach/plans/create-workout');
+                  } else {
+                    context.push('/coach/plans/create-nutrition');
+                  }
+                },
+                backgroundColor: AppColors.primary,
+                child: const Icon(Icons.add, color: AppColors.textLight),
+              ),
             ),
           ),
         );
@@ -170,7 +192,12 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: kBottomNavigationBarHeight + 32, // Add extra padding at bottom
+          ),
           itemCount: plans.length,
           itemBuilder: (context, index) {
             final plan = plans[index];
@@ -186,7 +213,6 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
                 subtitle: Text('${plan.duration} days'),
                 onTap: () async {
                   final planId = plan.id;
-                  print('CoachPlansScreen: Plan tapped with ID: $planId');
                   if (planId == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -196,20 +222,16 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
                     );
                     return;
                   }
-                  
-                  print('CoachPlansScreen: Setting workout ID in provider: $planId');
-                  // Set the workout ID first to avoid unnecessary fetches
                   workoutProvider.setWorkoutId(planId);
-                  
-                  print('CoachPlansScreen: Navigating to calendar screen with planId: $planId and duration: ${plan.duration}');
-                  // Navigate to calendar screen
-                  context.push(
+                  await context.push(
                     '/coach/plans/workout/calendar',
                     extra: {
                       'planId': planId,
                       'duration': plan.duration,
                     },
                   );
+                  // Refresh plans list when returning from calendar screen
+                  _fetchPlans();
                 },
               ),
             );
@@ -254,7 +276,12 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: kBottomNavigationBarHeight + 32, // Add extra padding at bottom
+          ),
           itemCount: plans.length,
           itemBuilder: (context, index) {
             final plan = plans[index];
@@ -277,11 +304,7 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
                     );
                     return;
                   }
-                  
-                  // Set the nutrition plan ID first
                   provider.setNutritionPlanId(planId);
-                  
-                  // Navigate to calendar screen
                   context.push(
                     '/coach/plans/nutrition/calendar',
                     extra: {

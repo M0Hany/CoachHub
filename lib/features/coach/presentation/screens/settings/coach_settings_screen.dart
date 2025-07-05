@@ -16,277 +16,123 @@ class CoachSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final languageProvider = Provider.of<LanguageProvider>(context);
-    final isArabic = languageProvider.currentLocale.languageCode == 'ar';
-
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: AppColors.primary,
-        statusBarIconBrightness: Brightness.light,
+    return Scaffold(
+      backgroundColor: AppTheme.mainBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppTheme.mainBackgroundColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF0D122A)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+        title: Text(
+          l10n.settings,
+          style: const TextStyle(
+            color: Color(0xFF0D122A),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: Stack(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Column(
-              children: [
-                Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(50),
-                    ),
-                  ),
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 32,
-                    bottom: 24,
-                    left: 24,
-                    right: 24,
-                  ),
-                  child: Center(
-                    child: Text(
-                      l10n.settings,
-                      style: AppTheme.screenTitle,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _buildSection(
-                        context,
-                        l10n.language,
-                        [
-                          _buildLanguageOption(
-                            context,
-                            'English',
-                            !isArabic,
-                            () => _changeLanguage(context, 'en'),
-                          ),
-                          _buildLanguageOption(
-                            context,
-                            'العربية',
-                            isArabic,
-                            () => _changeLanguage(context, 'ar'),
-                          ),
-                        ],
+            _SettingsButton(
+              text: l10n.resetPassword,
+              onTap: () {
+                context.go('/reset/email');
+              },
+            ),
+            const SizedBox(height: 16),
+            _SettingsButton(
+              text: l10n.logout,
+              onTap: () async {
+                // Restore the original logout logic
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(l10n.logout),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(l10n.cancel),
                       ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        context,
-                        l10n.accountSettings,
-                        [
-                          _buildSettingTile(
-                            context,
-                            l10n.notificationSettings,
-                            Icons.notifications_outlined,
-                            onTap: () {
-                              // TODO: Navigate to notifications settings
-                            },
-                          ),
-                          _buildSettingTile(
-                            context,
-                            l10n.availability,
-                            Icons.calendar_today_outlined,
-                            onTap: () {
-                              // TODO: Navigate to availability settings
-                            },
-                          ),
-                          _buildSettingTile(
-                            context,
-                            l10n.pricing,
-                            Icons.attach_money,
-                            onTap: () {
-                              // TODO: Navigate to pricing settings
-                            },
-                          ),
-                          _buildSettingTile(
-                            context,
-                            l10n.darkMode,
-                            Icons.dark_mode_outlined,
-                            isSwitch: true,
-                            onChanged: (value) {
-                              // TODO: Implement dark mode
-                            },
-                          ),
-                        ],
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: Text(l10n.logout),
                       ),
-                      const SizedBox(height: 16),
-                      _buildSection(
-                        context,
-                        l10n.expertise,
-                        [
-                          _buildSettingTile(
-                            context,
-                            l10n.certifications,
-                            Icons.workspace_premium_outlined,
-                            onTap: () {
-                              // TODO: Navigate to certifications
-                            },
-                          ),
-                          _buildSettingTile(
-                            context,
-                            l10n.specializations,
-                            Icons.fitness_center_outlined,
-                            onTap: () {
-                              // TODO: Navigate to specializations
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLogoutButton(context, l10n),
-                      const SizedBox(height: 80), // Add padding for bottom nav bar
                     ],
                   ),
-                ),
-              ],
-            ),
-            const Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavBar(
-                role: UserRole.coach,
-                currentIndex: 5,
-              ),
+                );
+                if (shouldLogout == true && context.mounted) {
+                  try {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(child: CircularProgressIndicator()),
+                    );
+                    final authProvider = context.read<AuthProvider>();
+                    await authProvider.logout();
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      context.go('/login');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.logoutError),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              isLogout: true,
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0D122A),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: Column(
-            children: children,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLanguageOption(
-    BuildContext context,
-    String language,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return ListTile(
-      onTap: onTap,
-      title: Text(
-        language,
-        style: TextStyle(
-          color: isSelected ? const Color(0xFF0FF789) : Colors.black,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
+      bottomNavigationBar: const BottomNavBar(
+        role: UserRole.coach,
+        currentIndex: 3,
       ),
-      trailing: isSelected
-          ? const Icon(
-              Icons.check_circle,
-              color: Color(0xFF0FF789),
-            )
-          : null,
     );
   }
+}
 
-  Widget _buildSettingTile(
-    BuildContext context,
-    String title,
-    IconData icon, {
-    bool isSwitch = false,
-    VoidCallback? onTap,
-    Function(bool)? onChanged,
-  }) {
-    return ListTile(
-      onTap: isSwitch ? null : onTap,
-      leading: Icon(
-        icon,
-        color: const Color(0xFF0D122A),
-      ),
-      title: Text(title),
-      trailing: isSwitch
-          ? Switch(
-              value: false, // TODO: Get value from provider
-              onChanged: onChanged,
-              activeColor: const Color(0xFF0FF789),
-            )
-          : const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-            ),
-    );
-  }
-
-  Widget _buildLogoutButton(BuildContext context, AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ElevatedButton(
-        onPressed: () async {
-          try {
-            final authProvider = context.read<AuthProvider>();
-            await authProvider.logout();
-            if (context.mounted) {
-              context.go('/login');
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(e.toString()),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Text(
-          l10n.logout,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+class _SettingsButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  final bool isLogout;
+  const _SettingsButton({
+    required this.text,
+    required this.onTap,
+    this.isLogout = false,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(15),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 14),
+          child: Text(
+            text,
+            style: AppTheme.bodyMedium,
           ),
         ),
       ),
     );
-  }
-
-  void _changeLanguage(BuildContext context, String languageCode) {
-    final provider = Provider.of<LanguageProvider>(context, listen: false);
-    provider.changeLanguage(languageCode);
   }
 } 

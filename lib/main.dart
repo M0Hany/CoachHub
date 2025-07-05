@@ -14,6 +14,8 @@ import 'features/auth/presentation/screens/dashboard_screen.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/coach/presentation/providers/workout/workout_plan_provider.dart';
 import 'features/coach/presentation/providers/nutrition/nutrition_plan_provider.dart';
+import 'features/coach/presentation/providers/coach_search_provider.dart';
+import 'features/coach/services/coach_service.dart';
 import 'core/providers/language_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/http_client.dart';
@@ -30,6 +32,7 @@ void main() async {
   // Initialize providers
   final authService = AuthService(httpClient, tokenService);
   final authProvider = AuthProvider(authService);
+  final coachService = CoachService(httpClient: httpClient);
 
   runApp(
     MultiProvider(
@@ -42,6 +45,9 @@ void main() async {
         ),
         ChangeNotifierProvider<NutritionPlanProvider>(
           create: (_) => NutritionPlanProvider(),
+        ),
+        ChangeNotifierProvider<CoachSearchProvider>(
+          create: (_) => CoachSearchProvider(coachService: coachService),
         ),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],

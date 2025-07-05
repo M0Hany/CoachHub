@@ -149,6 +149,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Logout';
 
   @override
+  String get logoutError => 'Failed to logout. Please try again.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -674,4 +677,163 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTraineesSubscribed => 'No trainees are subscribed to you yet';
+
+  @override
+  String get deletePlan => 'Delete Plan';
+
+  @override
+  String get deletePlanConfirmation => 'Are you sure you want to delete this plan?';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get weightLabel => 'Weight';
+
+  @override
+  String get heightLabel => 'Height';
+
+  @override
+  String get fatsLabel => 'Fats';
+
+  @override
+  String get muscleLabel => 'Muscle';
+
+  @override
+  String get searchForCoachesFields => 'Search for Coaches, fields..';
+
+  @override
+  String get noRecommendedCoaches => 'No recommended coaches available';
+
+  @override
+  String get subscribe => 'Subscribe';
+
+  @override
+  String get subscribeConfirmTitle => 'Subscribe to Coach';
+
+  @override
+  String subscribeConfirmMessage(String coachName) {
+    return 'Would you like to send a subscription request to $coachName?';
+  }
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get subscribeSuccess => 'Subscription request sent successfully';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get subscriptionRequestsTitle => 'Subscription Requests';
+
+  @override
+  String get acceptRequest => 'Accept';
+
+  @override
+  String get rejectRequest => 'Reject';
+
+  @override
+  String get noSubscriptionRequests => 'No subscription requests yet';
+
+  @override
+  String get acceptSubscriptionConfirmTitle => 'Accept Subscription';
+
+  @override
+  String get rejectSubscriptionConfirmTitle => 'Reject Subscription';
+
+  @override
+  String acceptSubscriptionConfirmMessage(String traineeName) {
+    return 'Are you sure you want to accept $traineeName\'s subscription request?';
+  }
+
+  @override
+  String rejectSubscriptionConfirmMessage(String traineeName) {
+    return 'Are you sure you want to reject $traineeName\'s subscription request?';
+  }
+
+  @override
+  String get resetPassword => 'Reset Password';
+
+  @override
+  String get logoutConfirm => 'Are you sure you want to logout?';
+
+  @override
+  String get healthConditionsTitle => 'Do you have any of these conditions?';
+
+  @override
+  String get hypertension => 'Hypertension (High Blood Pressure)';
+
+  @override
+  String get diabetes => 'Diabetes';
+
+  @override
+  String get assignPlan => 'Assign Plan';
+
+  @override
+  String get workoutPlanAssignedSuccessfully => 'Workout plan assigned successfully';
+
+  @override
+  String get nutritionPlanAssignedSuccessfully => 'Nutrition plan assigned successfully';
+
+  @override
+  String get forgotPasswordTitle => 'Forgot Your Password?';
+
+  @override
+  String get forgotPasswordSubtitle => 'Don\'t worry, we\'ll help you reset it. Please enter your registered email address to send a confirmation code';
+
+  @override
+  String get resetStepEmail => 'Email';
+
+  @override
+  String get resetStepOtp => 'OTP';
+
+  @override
+  String get resetStepNewPassword => 'New password';
+
+  @override
+  String get resetEmailLabel => 'Email';
+
+  @override
+  String get resetEmailHint => 'Enter your mail';
+
+  @override
+  String get resetSendCode => 'Send Code';
+
+  @override
+  String get otpResetTitle => 'Enter Verification code';
+
+  @override
+  String get otpResetSubtitle => 'A 6-digit code has been sent to your email. Please enter it below to reset your password.';
+
+  @override
+  String get otpResetContinue => 'Continue';
+
+  @override
+  String get newPasswordTitle => 'Create New Password';
+
+  @override
+  String get newPasswordSubtitle => 'Make sure your new password is strong';
+
+  @override
+  String get newPasswordLabel => 'New Password';
+
+  @override
+  String get newPasswordHint => 'Enter your new password';
+
+  @override
+  String get newPasswordConfirm => 'Confirm';
+
+  @override
+  String get newPasswordSuccess => 'Password reset successfully';
+
+  @override
+  String get newPasswordError => 'Failed to reset password. Please try again.';
+
+  @override
+  String get otpInvalid => 'Invalid OTP. Please try again.';
 }

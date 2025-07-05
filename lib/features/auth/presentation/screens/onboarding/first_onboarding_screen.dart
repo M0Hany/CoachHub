@@ -82,13 +82,13 @@ class FirstOnboardingScreen extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Padding(
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 410),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

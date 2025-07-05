@@ -73,6 +73,7 @@
   "certifications": "الشهادات",
   "specializations": "التخصصات",
   "logout": "تسجيل الخروج",
+  "logoutError": "فشل تسجيل الخروج. يرجى المحاولة مرة أخرى.",
   "settingsTitle": "الإعدادات",
   "languageSettings": "إعدادات اللغة",
   "accountSettingsTitle": "إعدادات الحساب",
@@ -324,5 +325,81 @@
   "verify": "تحقق",
   "invalidOtpCode": "رمز التحقق غير صحيح. حاول مرة أخرى.",
   "retry": "إعادة المحاولة",
-  "noTraineesSubscribed": "لا يوجد متدربين مشتركين معك حتى الآن"
+  "noTraineesSubscribed": "لا يوجد متدربين مشتركين معك حتى الآن",
+  "deletePlan": "حذف الخطة",
+  "deletePlanConfirmation": "هل أنت متأكد أنك تريد حذف هذه الخطة؟",
+  "delete": "حذف",
+  "cancel": "إلغاء",
+  "weightLabel": "الوزن",
+  "heightLabel": "الطول",
+  "fatsLabel": "الدهون",
+  "muscleLabel": "العضلات",
+  "weightLabel": "الوزن",
+  "heightLabel": "الطول",
+  "fatsLabel": "الدهون",
+  "muscleLabel": "العضلات",
+  "searchForCoachesFields": "البحث عن المدربين والمجالات..",
+  "noRecommendedCoaches": "لا يوجد مدربين موصى بهم",
+  "subscribe": "اشتراك",
+  "subscribeConfirmTitle": "الاشتراك مع المدرب",
+  "subscribeConfirmMessage": "هل تريد إرسال طلب اشتراك إلى {coachName}؟",
+  "@subscribeConfirmMessage": {
+    "placeholders": {
+      "coachName": {
+        "type": "String"
+      }
+    }
+  },
+  "confirm": "تأكيد",
+  "subscribeSuccess": "تم إرسال طلب الاشتراك بنجاح",
+  "close": "إغلاق",
+  "subscriptionRequestsTitle": "طلبات الاشتراك",
+  "acceptRequest": "قبول",
+  "rejectRequest": "رفض",
+  "noSubscriptionRequests": "لا توجد طلبات اشتراك حتى الآن",
+  "acceptSubscriptionConfirmTitle": "قبول الاشتراك",
+  "rejectSubscriptionConfirmTitle": "رفض الاشتراك",
+  "acceptSubscriptionConfirmMessage": "هل أنت متأكد أنك تريد قبول طلب اشتراك {traineeName}؟",
+  "rejectSubscriptionConfirmMessage": "هل أنت متأكد أنك تريد رفض طلب اشتراك {traineeName}؟",
+  "@acceptSubscriptionConfirmMessage": {
+    "placeholders": {
+      "traineeName": {
+        "type": "String"
+      }
+    }
+  },
+  "@rejectSubscriptionConfirmMessage": {
+    "placeholders": {
+      "traineeName": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPassword": "إعادة تعيين كلمة المرور",
+  "logoutConfirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+  "healthConditionsTitle": "هل لديك أي من هذه الأمراض؟",
+  "hypertension": "ارتفاع ضغط الدم",
+  "diabetes": "السكري",
+  "assignPlan": "تعيين خطة",
+  "workoutPlanAssignedSuccessfully": "تم تعيين خطة التمرين بنجاح",
+  "nutritionPlanAssignedSuccessfully": "تم تعيين خطة التغذية بنجاح",
+  "forgotPasswordTitle": "هل نسيت كلمة المرور؟",
+  "forgotPasswordSubtitle": "لا تقلق، سنساعدك في إعادة تعيينها. يرجى إدخال بريدك الإلكتروني المسجل لإرسال رمز التأكيد",
+  "resetStepEmail": "البريد الإلكتروني",
+  "resetStepOtp": "رمز التحقق",
+  "resetStepNewPassword": "كلمة مرور جديدة",
+  "resetEmailLabel": "البريد الإلكتروني",
+  "resetEmailHint": "أدخل بريدك الإلكتروني",
+  "resetSendCode": "إرسال الرمز",
+  "otpResetTitle": "أدخل رمز التحقق",
+  "otpResetSubtitle": "تم إرسال رمز مكون من 6 أرقام إلى بريدك الإلكتروني. يرجى إدخاله أدناه لإعادة تعيين كلمة المرور.",
+  "otpResetContinue": "متابعة",
+  "newPasswordTitle": "إنشاء كلمة مرور جديدة",
+  "newPasswordSubtitle": "تأكد من أن كلمة المرور الجديدة قوية",
+  "newPasswordLabel": "كلمة المرور الجديدة",
+  "newPasswordHint": "أدخل كلمة المرور الجديدة",
+  "newPasswordConfirm": "تأكيد",
+  "newPasswordSuccess": "تمت إعادة تعيين كلمة المرور بنجاح",
+  "newPasswordError": "فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
+  "otpInvalid": "رمز التحقق غير صحيح. حاول مرة أخرى."
 }

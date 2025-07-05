@@ -82,6 +82,49 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
     }
   }
 
+  Future<void> _showDeleteConfirmationDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.deletePlan),
+          content: Text(l10n.deletePlanConfirmation),
+          actions: <Widget>[
+            TextButton(
+              child: Text(l10n.cancel),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(color: Colors.red),
+              ),
+              onPressed: () async {
+                try {
+                  Navigator.of(dialogContext).pop();
+                  await context.read<WorkoutPlanProvider>().deletePlan(widget.planId);
+                  if (mounted) {
+                    context.go('/coach/plans');
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     print('WorkoutPlanCalendarScreen: dispose called');
@@ -92,20 +135,36 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Calculate cell height based on screen size
+    // We subtract the appBar height, title section height, bottom nav height, and some padding
+    final availableHeight = screenHeight - 
+        kToolbarHeight -  // AppBar
+        140 -            // Title section (including padding)
+        kBottomNavigationBarHeight - 
+        100 -           // Page indicator section
+        32;            // Extra padding
     
+    final cellHeight = (availableHeight / 5).clamp(80.0, 100.0);  // Min 80, max 100
+    final totalHeight = min(widget.duration, 5) * cellHeight;
+
     return Consumer<WorkoutPlanProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
           return Scaffold(
+            backgroundColor: AppTheme.mainBackgroundColor,
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.pop(),
               ),
-              title: const Text('Loading Plan...'),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
             ),
             body: const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Colors.grey,
+              ),
             ),
           );
         }
@@ -117,7 +176,8 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.pop(),
               ),
-              title: const Text('Error'),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
             ),
             body: Center(
               child: Column(
@@ -163,6 +223,15 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: _showDeleteConfirmationDialog,
+              ),
+            ],
           ),
           body: Stack(
             children: [
@@ -241,7 +310,7 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                   // Days Column
                                   Container(
                                     width: 80,
-                                    height: min(widget.duration, 5) * 100.0,
+                                    height: totalHeight,
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(15),
@@ -257,7 +326,7 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             SizedBox(
-                                              height: 100,
+                                              height: cellHeight,
                                               child: Center(
                                                 child: Column(
                                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -294,7 +363,7 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                   // Exercises Column
                                   Expanded(
                                     child: Container(
-                                      height: min(widget.duration, 5) * 100.0,
+                                      height: totalHeight,
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(15),
@@ -324,7 +393,7 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                                   });
                                                 },
                                                 child: SizedBox(
-                                                  height: 100,
+                                                  height: cellHeight,
                                                   child: Row(
                                                     children: [
                                                       Expanded(

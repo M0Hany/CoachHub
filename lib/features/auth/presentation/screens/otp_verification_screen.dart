@@ -159,47 +159,51 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  6,
-                  (index) => Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: _controllers[index].text.isNotEmpty 
-                            ? AppColors.accent 
-                            : const Color(0xFFD0D6F4),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextFormField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
+              // Always LTR for OTP input
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(
+                    6,
+                    (index) => Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: _controllers[index].text.isNotEmpty 
+                              ? AppTheme.accent 
+                              : const Color(0xFFD0D6F4),
+                          width: 2,
                         ),
-                        contentPadding: EdgeInsets.zero,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(1),
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      onChanged: (value) {
-                        setState(() {}); // Trigger rebuild to update border color
-                        _onOtpDigitChanged(index, value);
-                      },
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                      child: TextFormField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(1),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (value) {
+                          setState(() {}); // Trigger rebuild to update border color
+                          _onOtpDigitChanged(index, value);
+                        },
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

@@ -97,71 +97,84 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
       case 3:
         context.go(widget.role == UserRole.trainee ? '/trainee/profile' : '/coach/profile');
         break;
-      case 4:
-        context.go(widget.role == UserRole.trainee ? '/trainee/notifications' : '/coach/notifications');
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final items = widget.role == UserRole.trainee
+    final isTrainee = widget.role == UserRole.trainee;
+    final navItems = isTrainee
         ? [
-            _buildNavItem(Icons.search_outlined, Icons.search, l10n.navSearch, 0),
-            _buildNavItem(Icons.chat_bubble_outline, Icons.chat_bubble, l10n.navChats, 1),
-            _buildNavItem(Icons.home_outlined, Icons.home, l10n.navHome, 2),
-            _buildNavItem(Icons.person_outline, Icons.person, l10n.navProfile, 3),
-            _buildNavItem(Icons.notifications_outlined, Icons.notifications, l10n.navNotifications, 4),
+            {'label': l10n.navSearch, 'active': 'assets/icons/navigation/Search Active.png', 'inactive': 'assets/icons/navigation/Search Inactive.png'},
+            {'label': l10n.navChats, 'active': 'assets/icons/navigation/Chats Active.png', 'inactive': 'assets/icons/navigation/Chats Inactive.png'},
+            {'label': l10n.navHome, 'active': 'assets/icons/navigation/Home Active.png', 'inactive': 'assets/icons/navigation/Home Inactive.png'},
+            {'label': l10n.navProfile, 'active': 'assets/icons/navigation/Profile Active.png', 'inactive': 'assets/icons/navigation/Profile Inactive.png'},
           ]
         : [
-            _buildNavItem(Icons.fitness_center_outlined, Icons.fitness_center, l10n.navPlans, 0),
-            _buildNavItem(Icons.chat_bubble_outline, Icons.chat_bubble, l10n.navChats, 1),
-            _buildNavItem(Icons.home_outlined, Icons.home, l10n.navHome, 2),
-            _buildNavItem(Icons.person_outline, Icons.person, l10n.navProfile, 3),
-            _buildNavItem(Icons.notifications_outlined, Icons.notifications, l10n.navNotifications, 4),
+            {'label': l10n.navPlans, 'active': 'assets/icons/navigation/Plans Active.png', 'inactive': 'assets/icons/navigation/Plans Inactive.png'},
+            {'label': l10n.navChats, 'active': 'assets/icons/navigation/Chats Active.png', 'inactive': 'assets/icons/navigation/Chats Inactive.png'},
+            {'label': l10n.navHome, 'active': 'assets/icons/navigation/Home Active.png', 'inactive': 'assets/icons/navigation/Home Inactive.png'},
+            {'label': l10n.navProfile, 'active': 'assets/icons/navigation/Profile Active.png', 'inactive': 'assets/icons/navigation/Profile Inactive.png'},
           ];
 
     return SizedBox(
       height: 150,
       child: Stack(
         children: [
-          // Background with cutout
+          // Main bar background (no cutout, square top corners)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            height: 120,
+            height: 90,
             child: CustomPaint(
-              painter: NavBarPainter(
+              painter: NavBarBarPainter(
                 color: AppColors.accent,
-                selectedIndex: widget.currentIndex,
-                itemCount: items.length,
-                context: context,
+                itemCount: 4,
               ),
             ),
           ),
-          // Animated floating circle
+          // Cutout curve under the floating icon
           AnimatedBuilder(
             animation: _positionAnimation,
             builder: (context, child) {
               final isRTL = Directionality.of(context) == TextDirection.rtl;
-              final itemWidth = MediaQuery.of(context).size.width / items.length;
+              final itemWidth = MediaQuery.of(context).size.width / 4;
               final circleSize = 50.0;
-              
-              // Calculate base position
               double position = _positionAnimation.value * itemWidth;
-              
-              // Adjust for RTL
               if (isRTL) {
                 position = MediaQuery.of(context).size.width - position - itemWidth;
               }
-              
-              // Center within the item
-              position += (itemWidth - circleSize) / 2;
-
+              position += (itemWidth - circleSize) / 2 + circleSize / 2;
               return Positioned(
-                top: 20,
+                top: 60,
+                left: 0,
+                right: 0,
+                height: 55,
+                child: CustomPaint(
+                  painter: NavBarCutoutPainter(
+                    color: AppTheme.mainBackgroundColor,
+                    cutoutCenterX: position,
+                  ),
+                ),
+              );
+            },
+          ),
+          // Animated floating circle with selected icon
+          AnimatedBuilder(
+            animation: _positionAnimation,
+            builder: (context, child) {
+              final isRTL = Directionality.of(context) == TextDirection.rtl;
+              final itemWidth = MediaQuery.of(context).size.width / 4;
+              final circleSize = 50.0;
+              double position = _positionAnimation.value * itemWidth;
+              if (isRTL) {
+                position = MediaQuery.of(context).size.width - position - itemWidth;
+              }
+              position += (itemWidth - circleSize) / 2;
+              return Positioned(
+                top: 32, // Move the circle down a bit
                 left: position,
                 child: ScaleTransition(
                   scale: _scaleAnimation,
@@ -179,12 +192,19 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                         ),
                       ],
                     ),
+                    child: Center(
+                      child: Image.asset(
+                        navItems[widget.currentIndex]['active']!,
+                        width: 28,
+                        height: 28,
+                      ),
+                    ),
                   ),
                 ),
               );
             },
           ),
-          // Navigation items
+          // Navigation items (inactive icons and labels)
           Positioned(
             bottom: 0,
             left: 0,
@@ -192,7 +212,14 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
             height: 120,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: items,
+              children: List.generate(4, (index) {
+                final isSelected = index == widget.currentIndex;
+                return _buildNavItem(
+                  navItems[index]['inactive']!,
+                  navItems[index]['label']!,
+                  isSelected,
+                );
+              }),
             ),
           ),
         ],
@@ -200,67 +227,90 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNavItem(IconData icon, IconData activeIcon, String label, int index) {
-    final isSelected = index == widget.currentIndex;
-    final itemWidth = MediaQuery.of(context).size.width / 5; // Changed from 6 to 5 items
-
+  // Only show inactive icon and label for unselected tabs
+  Widget _buildNavItem(String iconPath, String label, bool isSelected) {
+    final itemWidth = MediaQuery.of(context).size.width / 4;
     return SizedBox(
       width: itemWidth,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _onItemTapped(index),
-          child: SizedBox(
-            height: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  transform: Matrix4.translationValues(
-                    0,
-                    isSelected ? -45 : 0,
-                    0,
+      child: IgnorePointer(
+        ignoring: isSelected, // Don't allow tap on selected tab
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _onItemTapped(navLabelToIndex(label)),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            focusColor: Colors.transparent,
+            child: SizedBox(
+              height: 120,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    transform: Matrix4.translationValues(
+                      0,
+                      isSelected ? -45 : 0,
+                      0,
+                    ),
+                    child: isSelected
+                        ? const SizedBox(height: 28) // Placeholder for selected icon
+                        : Image.asset(
+                            iconPath,
+                            width: 28,
+                            height: 28,
+                          ),
                   ),
-                  child: Icon(
-                    isSelected ? activeIcon : icon,
-                    color: isSelected ? AppColors.textLight : AppColors.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  // Helper to map label to index for onTap
+  int navLabelToIndex(String label) {
+    final l10n = AppLocalizations.of(context)!;
+    final isTrainee = widget.role == UserRole.trainee;
+    if (isTrainee) {
+      if (label == l10n.navSearch) return 0;
+      if (label == l10n.navChats) return 1;
+      if (label == l10n.navHome) return 2;
+      if (label == l10n.navProfile) return 3;
+    } else {
+      if (label == l10n.navPlans) return 0;
+      if (label == l10n.navChats) return 1;
+      if (label == l10n.navHome) return 2;
+      if (label == l10n.navProfile) return 3;
+    }
+    return 0;
+  }
 }
 
-class NavBarPainter extends CustomPainter {
+// New painter for the main bar (no cutout, square top corners)
+class NavBarBarPainter extends CustomPainter {
   final Color color;
-  final int selectedIndex;
   final int itemCount;
-  final BuildContext context;
 
-  NavBarPainter({
+  NavBarBarPainter({
     required this.color,
-    required this.selectedIndex,
     required this.itemCount,
-    required this.context,
   });
 
   @override
@@ -268,43 +318,56 @@ class NavBarPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-
-    final itemWidth = size.width / itemCount;
-    var selectedItemX = itemWidth * selectedIndex + itemWidth / 2;
-    
-    // Adjust for RTL
-    if (Directionality.of(context) == TextDirection.rtl) {
-      selectedItemX = size.width - selectedItemX;
-    }
-    
-    // Create the main path with the cutout
     final path = Path()
-      ..moveTo(0, 35)
-      ..lineTo(selectedItemX - 30, 35)
-      ..quadraticBezierTo(
-        selectedItemX - 25,
-        0,
-        selectedItemX,
-        0,
-      )
-      ..quadraticBezierTo(
-        selectedItemX + 25,
-        0,
-        selectedItemX + 30,
-        35,
-      )
-      ..lineTo(size.width, 35)
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
-
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(NavBarPainter oldDelegate) {
-    return oldDelegate.selectedIndex != selectedIndex ||
-           oldDelegate.color != color ||
-           oldDelegate.itemCount != itemCount;
+  bool shouldRepaint(NavBarBarPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.itemCount != itemCount;
+  }
+}
+
+// New painter for the cutout curve only
+class NavBarCutoutPainter extends CustomPainter {
+  final Color color;
+  final double cutoutCenterX;
+
+  NavBarCutoutPainter({
+    required this.color,
+    required this.cutoutCenterX,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    // Cutout shape: a small curve under the floating icon
+    const cutoutWidth = 90.0;
+    const cutoutDepth = 60.0;
+    final left = cutoutCenterX - cutoutWidth / 2;
+    final right = cutoutCenterX + cutoutWidth / 2;
+    final path = Path()
+      ..moveTo(left, 0)
+      ..quadraticBezierTo(
+        cutoutCenterX,
+        cutoutDepth,
+        right,
+        0,
+      )
+      ..lineTo(left, 0)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(NavBarCutoutPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.cutoutCenterX != cutoutCenterX;
   }
 }

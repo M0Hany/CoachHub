@@ -54,6 +54,7 @@
   "certifications": "Certifications",
   "specializations": "Specializations",
   "logout": "Logout",
+  "logoutError": "Failed to logout. Please try again.",
   "settingsTitle": "Settings",
   "languageSettings": "Language Settings",
   "accountSettingsTitle": "Account Settings",
@@ -323,5 +324,77 @@
   "verify": "Verify",
   "invalidOtpCode": "Invalid verification code. Please try again.",
   "retry": "Retry",
-  "noTraineesSubscribed": "No trainees are subscribed to you yet"
+  "noTraineesSubscribed": "No trainees are subscribed to you yet",
+  "deletePlan": "Delete Plan",
+  "deletePlanConfirmation": "Are you sure you want to delete this plan?",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "weightLabel": "Weight",
+  "heightLabel": "Height",
+  "fatsLabel": "Fats",
+  "muscleLabel": "Muscle",
+  "searchForCoachesFields": "Search for Coaches, fields..",
+  "noRecommendedCoaches": "No recommended coaches available",
+  "subscribe": "Subscribe",
+  "subscribeConfirmTitle": "Subscribe to Coach",
+  "subscribeConfirmMessage": "Would you like to send a subscription request to {coachName}?",
+  "@subscribeConfirmMessage": {
+    "placeholders": {
+      "coachName": {
+        "type": "String"
+      }
+    }
+  },
+  "confirm": "Confirm",
+  "subscribeSuccess": "Subscription request sent successfully",
+  "close": "Close",
+  "subscriptionRequestsTitle": "Subscription Requests",
+  "acceptRequest": "Accept",
+  "rejectRequest": "Reject",
+  "noSubscriptionRequests": "No subscription requests yet",
+  "acceptSubscriptionConfirmTitle": "Accept Subscription",
+  "rejectSubscriptionConfirmTitle": "Reject Subscription",
+  "acceptSubscriptionConfirmMessage": "Are you sure you want to accept {traineeName}'s subscription request?",
+  "rejectSubscriptionConfirmMessage": "Are you sure you want to reject {traineeName}'s subscription request?",
+  "@acceptSubscriptionConfirmMessage": {
+    "placeholders": {
+      "traineeName": {
+        "type": "String"
+      }
+    }
+  },
+  "@rejectSubscriptionConfirmMessage": {
+    "placeholders": {
+      "traineeName": {
+        "type": "String"
+      }
+    }
+  },
+  "resetPassword": "Reset Password",
+  "logoutConfirm": "Are you sure you want to logout?",
+  "healthConditionsTitle": "Do you have any of these conditions?",
+  "hypertension": "Hypertension (High Blood Pressure)",
+  "diabetes": "Diabetes",
+  "assignPlan": "Assign Plan",
+  "workoutPlanAssignedSuccessfully": "Workout plan assigned successfully",
+  "nutritionPlanAssignedSuccessfully": "Nutrition plan assigned successfully",
+  "forgotPasswordTitle": "Forgot Your Password?",
+  "forgotPasswordSubtitle": "Don't worry, we'll help you reset it. Please enter your registered email address to send a confirmation code",
+  "resetStepEmail": "Email",
+  "resetStepOtp": "OTP",
+  "resetStepNewPassword": "New password",
+  "resetEmailLabel": "Email",
+  "resetEmailHint": "Enter your mail",
+  "resetSendCode": "Send Code",
+  "otpResetTitle": "Enter Verification code",
+  "otpResetSubtitle": "A 6-digit code has been sent to your email. Please enter it below to reset your password.",
+  "otpResetContinue": "Continue",
+  "newPasswordTitle": "Create New Password",
+  "newPasswordSubtitle": "Make sure your new password is strong",
+  "newPasswordLabel": "New Password",
+  "newPasswordHint": "Enter your new password",
+  "newPasswordConfirm": "Confirm",
+  "newPasswordSuccess": "Password reset successfully",
+  "newPasswordError": "Failed to reset password. Please try again.",
+  "otpInvalid": "Invalid OTP. Please try again."
 }

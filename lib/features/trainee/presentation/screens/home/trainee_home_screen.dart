@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -7,6 +8,51 @@ import '../../../../../core/network/http_client.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+
+// Language-specific layout values
+class NutritionPlanLayoutValues {
+  // English (LTR) values
+  static const ltrBreakfastFlex = 5;
+  static const ltrLunchFlex = 3;
+  static const ltrDinnerFlex = 4;
+  static const ltrSnackFlex = 4;
+
+  static const ltrBreakfastMargin = EdgeInsetsDirectional.symmetric(horizontal: 18);
+  static const ltrLunchMargin = EdgeInsetsDirectional.symmetric(horizontal: 5);
+  static const ltrDinnerMargin = EdgeInsetsDirectional.only(start: 25);
+  static const ltrSnackMargin = EdgeInsetsDirectional.only(start: 30);
+
+  // Arabic (RTL) values - starting with same values as English, adjust as needed
+  static const rtlBreakfastFlex = 5;
+  static const rtlLunchFlex = 5;
+  static const rtlDinnerFlex = 5;
+  static const rtlSnackFlex = 5;
+
+  static const rtlBreakfastMargin = EdgeInsetsDirectional.only(start: 20);
+  static const rtlLunchMargin = EdgeInsetsDirectional.only(start: 30);
+  static const rtlDinnerMargin = EdgeInsetsDirectional.only(start: 34);
+  static const rtlSnackMargin = EdgeInsetsDirectional.only(start: 34);
+
+  // Get values based on text direction
+  static int getBreakfastFlex(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrBreakfastFlex : rtlBreakfastFlex;
+  static int getLunchFlex(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrLunchFlex : rtlLunchFlex;
+  static int getDinnerFlex(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrDinnerFlex : rtlDinnerFlex;
+  static int getSnackFlex(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrSnackFlex : rtlSnackFlex;
+
+  static EdgeInsetsDirectional getBreakfastMargin(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrBreakfastMargin : rtlBreakfastMargin;
+  static EdgeInsetsDirectional getLunchMargin(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrLunchMargin : rtlLunchMargin;
+  static EdgeInsetsDirectional getDinnerMargin(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrDinnerMargin : rtlDinnerMargin;
+  static EdgeInsetsDirectional getSnackMargin(TextDirection direction) =>
+      direction == TextDirection.ltr ? ltrSnackMargin : rtlSnackMargin;
+}
 
 class TraineeHomeScreen extends StatefulWidget {
   const TraineeHomeScreen({super.key});
@@ -17,7 +63,6 @@ class TraineeHomeScreen extends StatefulWidget {
 
 class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedMetricIndex = 1;
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _traineeProfile;
@@ -55,10 +100,30 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
         final workoutData = workoutResponse.data!['data']['assigned_workout'];
         if (workoutData != null) {
           _workoutPlan = workoutData;
-          // Calculate current day based on start date
           final startDate = DateTime.parse(workoutData['start_date']);
-          final daysSinceStart = DateTime.now().difference(startDate).inDays;
-          _currentWorkoutDay = ((daysSinceStart % workoutData['workout']['duration']) + 1).toInt();
+          final now = DateTime.now();
+          
+          // Calculate days since start by comparing dates only (ignoring time)
+          final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
+          final nowDateOnly = DateTime(now.year, now.month, now.day);
+          final daysSinceStart = nowDateOnly.difference(startDateOnly).inDays;
+          
+          // If it's the same day as start date, show day 1
+          // If it's the next day, show day 2, etc.
+          if (daysSinceStart < 0) {
+            // If start date is in the future, show day 1
+            _currentWorkoutDay = 1;
+          } else {
+            // Calculate current day (1-based)
+            _currentWorkoutDay = daysSinceStart + 1;
+            
+            // If we've exceeded the plan duration, cycle back
+            final duration = workoutData['workout']['duration'];
+            if (_currentWorkoutDay > duration) {
+              _currentWorkoutDay = ((_currentWorkoutDay - 1) % duration + 1).toInt();
+            }
+          }
+         
         }
       }
 
@@ -71,10 +136,29 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
         final nutritionData = nutritionResponse.data!['data']['assigned_plan'];
         if (nutritionData != null) {
           _nutritionPlan = nutritionData;
-          // Calculate current day based on start date
           final startDate = DateTime.parse(nutritionData['start_date']);
-          final daysSinceStart = DateTime.now().difference(startDate).inDays;
-          _currentNutritionDay = ((daysSinceStart % nutritionData['nutrition']['duration']) + 1).toInt();
+          final now = DateTime.now();
+          
+          // Calculate days since start by comparing dates only (ignoring time)
+          final startDateOnly = DateTime(startDate.year, startDate.month, startDate.day);
+          final nowDateOnly = DateTime(now.year, now.month, now.day);
+          final daysSinceStart = nowDateOnly.difference(startDateOnly).inDays;
+          
+          // If it's the same day as start date, show day 1
+          // If it's the next day, show day 2, etc.
+          if (daysSinceStart < 0) {
+            // If start date is in the future, show day 1
+            _currentNutritionDay = 1;
+          } else {
+            // Calculate current day (1-based)
+            _currentNutritionDay = daysSinceStart + 1;
+            
+            // If we've exceeded the plan duration, cycle back
+            final duration = nutritionData['nutrition']['duration'];
+            if (_currentNutritionDay > duration) {
+              _currentNutritionDay = ((_currentNutritionDay - 1) % duration + 1).toInt();
+            }
+          }
         }
       }
     } catch (e) {
@@ -94,6 +178,12 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: AppTheme.mainBackgroundColor,
+        statusBarIconBrightness: Brightness.dark, // adjust if needed
+      ),
+    );
     final l10n = AppLocalizations.of(context)!;
 
     if (_isLoading) {
@@ -127,327 +217,393 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
         );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.mainBackgroundColor,
+      extendBody: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with profile
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundImage: AssetImage(
-                        _traineeProfile?['image_url'] != null
-                            ? _traineeProfile!['image_url']
-                            : 'assets/images/default_profile.jpg',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.goodMorning,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          _traineeProfile?['full_name'] ?? '',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Tabs
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: const Color(0xFF0FF789),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    labelColor: Colors.black,
-                    unselectedLabelColor: Colors.grey,
-                    tabs: [
-                      Tab(text: l10n.workoutPlans),
-                      Tab(text: l10n.nutritionPlans),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Tab content
-                SizedBox(
-                  height: 100,
-                  child: TabBarView(
-                    controller: _tabController,
+        bottom: false, // allow content under nav bar
+        child: Column(
+          children: [
+            // Header with profile (keep at full width)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      // Workout plans tab
-                      if (_workoutPlan != null && currentDayExercises != null)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${l10n.workout_plans_day} $_currentWorkoutDay',
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      for (var exercise in currentDayExercises)
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.circle, size: 8, color: Color(0xFF0FF789)),
-                                            const SizedBox(width: 8),
-                                            Text(exercise['exercise']['title']),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                  const Spacer(),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      context.go('/trainee/workout-plan/${_workoutPlan!['workout']['title']}');
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0FF789),
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-                                    child: Text(l10n.showPlan),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        Center(child: Text(l10n.noWorkoutPlans)),
-                      // Nutrition plans tab
-                      _nutritionPlan != null
-                          ? Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: Colors.grey[300]!),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _nutritionPlan!['nutrition']['title'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text('Day $_currentNutritionDay'),
-                                ],
-                              ),
-                            )
-                          : Center(child: Text(l10n.noNutritionPlans)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Dashboard title
-                Text(
-                  l10n.dashboard,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Metrics grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.5,
-                  children: [
-                    _buildMetricCard(
-                      icon: Icons.monitor_weight,
-                      label: l10n.bodyWeight,
-                      value: _traineeProfile?['weight']?.toString() ?? '0',
-                      unit: l10n.kg,
-                    ),
-                    _buildMetricCard(
-                      icon: Icons.height,
-                      label: l10n.bodyHeight,
-                      value: _traineeProfile?['height']?.toString() ?? '0',
-                      unit: l10n.cm,
-                    ),
-                    _buildMetricCard(
-                      icon: Icons.water_drop,
-                      label: l10n.fatsPercentage,
-                      value: _traineeProfile?['body_fat']?.toString() ?? '0',
-                      unit: l10n.percentSymbol,
-                    ),
-                    _buildMetricCard(
-                      icon: Icons.fitness_center,
-                      label: l10n.bodyMuscle,
-                      value: _traineeProfile?['body_muscle']?.toString() ?? '0',
-                      unit: l10n.kg,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Metric selector
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildMetricSelector('Fats', 0),
-                    _buildMetricSelector('Weight', 1),
-                    _buildMetricSelector('Height', 2),
-                    _buildMetricSelector('Muscles', 3),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Fats Graph
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D122A),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      _buildProfileImage(_traineeProfile),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.fatsGraph,
+                            l10n.goodMorning,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            _traineeProfile?['full_name'] ?? '',
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0FF789),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              l10n.monthly,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.currentFatPercentage,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '${_traineeProfile?['body_fat']?.toString() ?? '0'}${l10n.percentSymbol}',
-                        style: const TextStyle(
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      context.push('/trainee/notifications');
+                    },
+                    icon: Image.asset(
+                      'assets/icons/navigation/Notifications.png',
+                      width: 28,
+                      height: 28,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 120), // allow scrolling above nav bar
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Tabs
+                      Container(
+                        height: 40,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
                           color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicator: const UnderlineTabIndicator(
+                            borderSide: BorderSide(width: 3.0, color: AppColors.accent),
+                            insets: EdgeInsets.symmetric(horizontal: -24),
+                          ),
+                          indicatorColor: Colors.transparent,
+                          labelColor: AppColors.textDark,
+                          unselectedLabelColor: AppColors.textDark.withOpacity(0.6),
+                          tabs: [
+                            Tab(text: l10n.workoutPlans),
+                            Tab(text: l10n.nutritionPlans),
+                          ],
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          dividerColor: Colors.transparent,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        height: 100,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: List.generate(7, (index) {
-                            final heights = [0.6, 0.4, 0.7, 0.9, 0.5, 0.3, 0.6];
-                            final isSelected = index == 4;
-                            return Container(
-                              width: 30,
-                              height: 100 * heights[index],
-                              decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFF0FF789) : Colors.white24,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: isSelected
-                                  ? Center(
-                                      child: Transform.translate(
-                                        offset: const Offset(0, -20),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
+
+                      // Tab content
+                      Container(
+                        height: 80,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            // Workout plans tab
+                            if (_workoutPlan != null && currentDayExercises != null)
+                              Row(
+                                children: [
+                                  // Day cell
+                                  Container(
+                                    width: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(15),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          spreadRadius: 1,
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          l10n.workout_plans_day,
+                                          style: AppTheme.bodyMedium.copyWith(
+                                            color: AppTheme.labelColor,
                                           ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF0FF789),
-                                            borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        Text(
+                                          _currentWorkoutDay.toString(),
+                                          style: AppTheme.headerLarge.copyWith(
+                                            color: AppColors.primary,
                                           ),
-                                          child: Text(
-                                            _traineeProfile?['body_fat']?.toString() ?? '0',
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Exercises cell
+                                  Expanded(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(15),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.1),
+                                            spreadRadius: 1,
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  for (var exercise in currentDayExercises)
+                                                    Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 8,
+                                                          height: 8,
+                                                          margin: const EdgeInsets.only(right: 8),
+                                                          decoration: const BoxDecoration(
+                                                            color: AppColors.accent,
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          exercise['exercise']['target_muscle'],
+                                                          style: AppTheme.headerMedium.copyWith(
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 16.0),
+                                            child: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: const BoxDecoration(
+                                                color: AppColors.accent,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: IconButton(
+                                                padding: EdgeInsets.zero,
+                                                onPressed: () {
+                                                  context.push('/trainee/workout-plan-details', extra: {
+                                                    'planId': _workoutPlan!['workout']['id'],
+                                                    'duration': _workoutPlan!['workout']['duration'],
+                                                  });
+                                                },
+                                                icon: const Icon(
+                                                  Icons.arrow_forward,
+                                                  color: AppColors.primary,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Center(child: Text(l10n.noWorkoutPlans)),
+                            // Nutrition plans tab
+                            _nutritionPlan != null
+                                ? Row(
+                                    children: [
+                                      // Day cell
+                                      Container(
+                                        width: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(15),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.grey.withOpacity(0.1),
+                                              spreadRadius: 1,
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              l10n.workout_plans_day,
+                                              style: AppTheme.bodyMedium.copyWith(
+                                                color: AppTheme.labelColor,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _currentNutritionDay.toString(),
+                                              style: AppTheme.headerLarge.copyWith(
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Meals grid
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            context.push('/trainee/nutrition-plan-details', extra: {
+                                              'planId': _nutritionPlan!['nutrition']['id'],
+                                              'duration': _nutritionPlan!['nutrition']['duration'],
+                                            });
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(15),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.grey.withOpacity(0.1),
+                                                  spreadRadius: 1,
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                // Meal content row
+                                                Expanded(
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        flex: NutritionPlanLayoutValues.getBreakfastFlex(Directionality.of(context)),
+                                                        child: _buildMealCell(
+                                                          currentDayNutrition?['breakfast'] ?? '',
+                                                          false,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: NutritionPlanLayoutValues.getLunchFlex(Directionality.of(context)),
+                                                        child: _buildMealCell(
+                                                          currentDayNutrition?['lunch'] ?? '',
+                                                          false,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: NutritionPlanLayoutValues.getDinnerFlex(Directionality.of(context)),
+                                                        child: _buildMealCell(
+                                                          currentDayNutrition?['dinner'] ?? '',
+                                                          false,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: NutritionPlanLayoutValues.getSnackFlex(Directionality.of(context)),
+                                                        child: _buildMealCell(
+                                                          currentDayNutrition?['snacks'] ?? '',
+                                                          true,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
                                       ),
-                                    )
-                                  : null,
-                            );
-                          }),
+                                    ],
+                                  )
+                                : Center(child: Text(l10n.noNutritionPlans)),
+                          ],
                         ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Dashboard title
+                      Text(
+                        l10n.dashboard,
+                        style: AppTheme.headerSmall,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Metrics row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildMetricItem(
+                            iconAsset: 'assets/icons/Weight.png',
+                            label: l10n.weightLabel,
+                            value: _traineeProfile?['weight']?.toString() ?? '0',
+                            unit: l10n.kg,
+                          ),
+                          _buildMetricItem(
+                            iconAsset: 'assets/icons/Height.png',
+                            label: l10n.heightLabel,
+                            value: _traineeProfile?['height']?.toString() ?? '0',
+                            unit: l10n.cm,
+                          ),
+                          _buildMetricItem(
+                            iconAsset: 'assets/icons/Fats.png',
+                            label: l10n.fatsLabel,
+                            value: _traineeProfile?['body_fat']?.toString() ?? '0',
+                            unit: l10n.percentSymbol,
+                          ),
+                          _buildMetricItem(
+                            iconAsset: 'assets/icons/Muscle.png',
+                            label: l10n.muscleLabel,
+                            value: _traineeProfile?['body_muscle']?.toString() ?? '0',
+                            unit: l10n.percentSymbol,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Health Graph Section
+                      _HealthGraphSection(
+                        currentFat: double.tryParse(_traineeProfile?['body_fat']?.toString() ?? '0') ?? 0,
+                        currentWeight: double.tryParse(_traineeProfile?['weight']?.toString() ?? '0') ?? 0,
+                        currentMuscle: double.tryParse(_traineeProfile?['body_muscle']?.toString() ?? '0') ?? 0,
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
       bottomNavigationBar: const BottomNavBar(
@@ -457,79 +613,280 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
     );
   }
 
-  Widget _buildMetricCard({
-    required IconData icon,
+  Widget _buildMetricItem({
+    String? iconAsset,
     required String label,
     required String value,
     required String unit,
   }) {
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            shape: BoxShape.circle,
+          ),
+          child: iconAsset != null
+              ? Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Image.asset(iconAsset, fit: BoxFit.contain),
+                )
+              : null,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: AppTheme.bodySmall,
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 2),
+            Text(
+              unit,
+              style: AppTheme.bodySmall,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMealCell(String meal, bool isLast) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF0FF789).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      alignment: Alignment.center,
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0FF789),
-              borderRadius: BorderRadius.circular(12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: meal.isEmpty
+                ? const SizedBox()
+                : Text(
+                    meal,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
             ),
-            child: Icon(icon, color: Colors.black),
           ),
-          const Spacer(),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
-          ),
-          Row(
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                unit,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+          if (!isLast) Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            width: 1,
+            color: AppColors.background,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricSelector(String label, int index) {
-    final isSelected = _selectedMetricIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedMetricIndex = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0FF789) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.black : Colors.grey,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  Widget _buildProfileImage(Map<String, dynamic>? profile, {double radius = 30}) {
+    String? imageUrl = profile?['image_url'] as String?;
+    String? fullUrl = (imageUrl != null && imageUrl.isNotEmpty)
+        ? (imageUrl.startsWith('http') ? imageUrl : 'https://coachhub-production.up.railway.app/$imageUrl')
+        : null;
+    return CircleAvatar(
+      radius: radius,
+      backgroundImage: fullUrl != null
+          ? NetworkImage(fullUrl)
+          : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
+    );
+  }
+}
+
+class _HealthGraphSection extends StatefulWidget {
+  final double currentFat;
+  final double currentWeight;
+  final double currentMuscle;
+  const _HealthGraphSection({
+    required this.currentFat,
+    required this.currentWeight,
+    required this.currentMuscle,
+  });
+
+  @override
+  State<_HealthGraphSection> createState() => _HealthGraphSectionState();
+}
+
+class _HealthGraphSectionState extends State<_HealthGraphSection> {
+  int selectedMetric = 0; // 0: Fats, 1: Weight, 2: Muscle
+  int selectedBar = 6; // Last bar is current value
+
+  static const double _graphHeight = 130; // increased to fit chip
+
+  List<double> getMockData(int metric) {
+    // 6 mock values + 1 real value
+    switch (metric) {
+      case 0:
+        return [19.2, 18.9, 18.7, 18.5, 18.4, 18.3, widget.currentFat];
+      case 1:
+        return [72.0, 71.8, 71.5, 71.2, 71.0, 70.8, widget.currentWeight];
+      case 2:
+        return [28.0, 28.2, 28.4, 28.6, 28.8, 29.0, widget.currentMuscle];
+      default:
+        return [0, 0, 0, 0, 0, 0, 0];
+    }
+  }
+
+  String getMetricLabel(int metric, AppLocalizations l10n) {
+    switch (metric) {
+      case 0:
+        return l10n.currentFatPercentage;
+      case 1:
+        return l10n.bodyWeight;
+      case 2:
+        return l10n.bodyMuscle;
+      default:
+        return '';
+    }
+  }
+
+  String getMetricUnit(int metric, AppLocalizations l10n) {
+    switch (metric) {
+      case 0:
+        return l10n.percentSymbol;
+      case 1:
+        return l10n.kg;
+      case 2:
+        return l10n.percentSymbol;
+      default:
+        return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final data = getMockData(selectedMetric);
+    final currentValue = data.last;
+    final metricLabel = getMetricLabel(selectedMetric, l10n);
+    final metricUnit = getMetricUnit(selectedMetric, l10n);
+    final metricNames = [l10n.fatsLabel, l10n.weightLabel, l10n.muscleLabel];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D122A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Metric selector buttons
+          Row(
+            children: List.generate(3, (i) {
+              final isSelected = selectedMetric == i;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedMetric = i;
+                      selectedBar = 6; // Reset to last bar (current value)
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppTheme.accent : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      metricNames[i],
+                      style: AppTheme.bodySmall.copyWith(
+                        color: isSelected ? Colors.black : AppTheme.textDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
-        ),
+          const SizedBox(height: 16),
+          // Top left label (localized)
+          Text(
+            metricLabel,
+            style: AppTheme.bodySmall.copyWith(color: AppTheme.textLight),
+          ),
+          const SizedBox(height: 4),
+          // Current value (always last bar)
+          Text(
+            '$currentValue$metricUnit',
+            style: AppTheme.bodyLarge.copyWith(color: AppTheme.textLight),
+          ),
+          const SizedBox(height: 16),
+          // Graph
+          SizedBox(
+            height: _graphHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(7, (index) {
+                final isSelected = selectedBar == index;
+                final max = data.reduce((a, b) => a > b ? a : b);
+                final min = data.reduce((a, b) => a < b ? a : b);
+                final barHeight = max == min ? 0.7 : 0.3 + 0.7 * ((data[index] - min) / (max - min));
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedBar = index;
+                    });
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 30,
+                        height: (_graphHeight - 30) * barHeight,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppTheme.accent : const Color(0xFF434E81),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      if (isSelected)
+                        Positioned(
+                          top: -38,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Text(
+                              '${data[index]}$metricUnit',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
-} 
+}

@@ -9,6 +9,7 @@ class NutritionPlanProvider extends ChangeNotifier {
   int? _selectedDayIndex;
   bool _isLoading = false;
   String? _error;
+  HttpClient _httpClient = HttpClient();
 
   NutritionPlan? get nutritionPlan => _nutritionPlan;
   List<NutritionPlan> get savedPlans => _savedPlans;
@@ -17,14 +18,19 @@ class NutritionPlanProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> fetchNutritionPlans() async {
-    _isLoading = true;
-    _error = null;
+  void setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
+  }
+
+  Future<void> fetchNutritionPlans() async {
+    if (_isLoading) return; // Prevent multiple simultaneous fetches
+    
+    setLoading(true); // Use a single notification
+    _error = null;
 
     try {
-      final httpClient = HttpClient();
-      final response = await httpClient.get<Map<String, dynamic>>(
+      final response = await _httpClient.get<Map<String, dynamic>>(
         '/api/plans/nutrition/my-plans',
       );
 
@@ -48,8 +54,7 @@ class NutritionPlanProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      setLoading(false); // Use a single notification
     }
   }
 
@@ -59,8 +64,7 @@ class NutritionPlanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final httpClient = HttpClient();
-      final response = await httpClient.get<Map<String, dynamic>>(
+      final response = await _httpClient.get<Map<String, dynamic>>(
         '/api/plans/nutrition/$planId',
       );
 
@@ -170,7 +174,7 @@ class NutritionPlanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await HttpClient().get<Map<String, dynamic>>(
+      final response = await _httpClient.get<Map<String, dynamic>>(
         '/api/plans/nutrition/$id',
       );
 
@@ -207,7 +211,7 @@ class NutritionPlanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await HttpClient().put<Map<String, dynamic>>(
+      final response = await _httpClient.put<Map<String, dynamic>>(
         '/api/plans/nutrition/${_nutritionPlan!.id}',
         data: {
           'title': _nutritionPlan!.title,
@@ -228,6 +232,47 @@ class NutritionPlanProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deletePlan(int planId) async {
+    print('NutritionPlanProvider: deletePlan started for plan $planId');
+    
+    _error = null;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      print('NutritionPlanProvider: Making HTTP request to delete plan $planId');
+      final response = await _httpClient.delete<Map<String, dynamic>>(
+        '/api/plans/nutrition/$planId',
+      );
+      print('NutritionPlanProvider: Received API response:');
+      print(response.data);
+
+      if (response.data?['status'] == 'success') {
+        print('NutritionPlanProvider: Plan deleted successfully');
+        // Remove the plan from saved plans if it exists
+        _savedPlans.removeWhere((plan) => plan.id == planId);
+        // Clear current plan if it was the deleted one
+        if (_nutritionPlan?.id == planId) {
+          _nutritionPlan = null;
+          _selectedDayIndex = null;
+          _currentDayPage = 0;
+        }
+      } else {
+        print('NutritionPlanProvider: Response status is not success');
+        throw Exception(response.data?['message'] ?? 'Failed to delete nutrition plan');
+      }
+    } catch (e) {
+      print('NutritionPlanProvider: Error in deletePlan:');
+      print(e);
+      _error = e.toString();
+      rethrow;
+    } finally {
+      print('NutritionPlanProvider: Setting loading state to false and notifying listeners');
       _isLoading = false;
       notifyListeners();
     }

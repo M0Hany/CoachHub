@@ -82,7 +82,7 @@ class ThirdOnboardingScreen extends StatelessWidget {
                       Center(
                         child: Image.asset(
                           'assets/images/onboarding/stretching_person.png',
-                          height: 400,
+                          height: 350,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -90,8 +90,9 @@ class ThirdOnboardingScreen extends StatelessWidget {
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            const SizedBox(height: 80),
+                            const SizedBox(height: 30),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

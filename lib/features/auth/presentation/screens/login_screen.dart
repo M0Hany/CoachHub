@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/constants/enums.dart';
-import '../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/language_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -110,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Login error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('An error occurred. Please try again.'),
             backgroundColor: Colors.red,
           ),
@@ -126,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       backgroundColor: AppTheme.authBackgroundColor,
@@ -137,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
           IconButton(
             icon: const Icon(
               Icons.language,
-              color: Color(0xFF0FF789),
+              color: AppTheme.accent,
             ),
             onPressed: _showLanguageDialog,
           ),
@@ -187,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 48),
                         Text(
-                          'Username',
+                          l10n.username,
                           style: AppTheme.bodyMedium.copyWith(
                             color: AppTheme.textLight,
                           ),
@@ -196,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _usernameController,
                           decoration: AppTheme.authInputDecoration.copyWith(
-                            hintText: 'Enter username',
+                            hintText: l10n.enterUsername,
                             prefixIcon: const Icon(
                               Icons.person_outline,
                               color: Color(0xFF8E8E93),
@@ -261,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             TextButton(
                               onPressed: () {
-                                // TODO: Implement forgot password
+                                context.go('/reset/email');
                               },
                               child: Text(
                                 l10n.forgetPassword,

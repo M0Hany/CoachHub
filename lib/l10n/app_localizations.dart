@@ -371,6 +371,12 @@ abstract class AppLocalizations {
   /// **'Logout'**
   String get logout;
 
+  /// No description provided for @logoutError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to logout. Please try again.'**
+  String get logoutError;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
@@ -1372,6 +1378,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No trainees are subscribed to you yet'**
   String get noTraineesSubscribed;
+
+  /// No description provided for @deletePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Plan'**
+  String get deletePlan;
+
+  /// No description provided for @deletePlanConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this plan?'**
+  String get deletePlanConfirmation;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @weightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get weightLabel;
+
+  /// No description provided for @heightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get heightLabel;
+
+  /// No description provided for @fatsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fats'**
+  String get fatsLabel;
+
+  /// No description provided for @muscleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle'**
+  String get muscleLabel;
+
+  /// No description provided for @searchForCoachesFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for Coaches, fields..'**
+  String get searchForCoachesFields;
+
+  /// No description provided for @noRecommendedCoaches.
+  ///
+  /// In en, this message translates to:
+  /// **'No recommended coaches available'**
+  String get noRecommendedCoaches;
+
+  /// No description provided for @subscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribe;
+
+  /// No description provided for @subscribeConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to Coach'**
+  String get subscribeConfirmTitle;
+
+  /// No description provided for @subscribeConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to send a subscription request to {coachName}?'**
+  String subscribeConfirmMessage(String coachName);
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @subscribeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription request sent successfully'**
+  String get subscribeSuccess;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @subscriptionRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Requests'**
+  String get subscriptionRequestsTitle;
+
+  /// No description provided for @acceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptRequest;
+
+  /// No description provided for @rejectRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectRequest;
+
+  /// No description provided for @noSubscriptionRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscription requests yet'**
+  String get noSubscriptionRequests;
+
+  /// No description provided for @acceptSubscriptionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Subscription'**
+  String get acceptSubscriptionConfirmTitle;
+
+  /// No description provided for @rejectSubscriptionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Subscription'**
+  String get rejectSubscriptionConfirmTitle;
+
+  /// No description provided for @acceptSubscriptionConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to accept {traineeName}\'s subscription request?'**
+  String acceptSubscriptionConfirmMessage(String traineeName);
+
+  /// No description provided for @rejectSubscriptionConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reject {traineeName}\'s subscription request?'**
+  String rejectSubscriptionConfirmMessage(String traineeName);
+
+  /// No description provided for @resetPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Password'**
+  String get resetPassword;
+
+  /// No description provided for @logoutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirm;
+
+  /// No description provided for @healthConditionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you have any of these conditions?'**
+  String get healthConditionsTitle;
+
+  /// No description provided for @hypertension.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypertension (High Blood Pressure)'**
+  String get hypertension;
+
+  /// No description provided for @diabetes.
+  ///
+  /// In en, this message translates to:
+  /// **'Diabetes'**
+  String get diabetes;
+
+  /// No description provided for @assignPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign Plan'**
+  String get assignPlan;
+
+  /// No description provided for @workoutPlanAssignedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout plan assigned successfully'**
+  String get workoutPlanAssignedSuccessfully;
+
+  /// No description provided for @nutritionPlanAssignedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition plan assigned successfully'**
+  String get nutritionPlanAssignedSuccessfully;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Your Password?'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t worry, we\'ll help you reset it. Please enter your registered email address to send a confirmation code'**
+  String get forgotPasswordSubtitle;
+
+  /// No description provided for @resetStepEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get resetStepEmail;
+
+  /// No description provided for @resetStepOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP'**
+  String get resetStepOtp;
+
+  /// No description provided for @resetStepNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get resetStepNewPassword;
+
+  /// No description provided for @resetEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get resetEmailLabel;
+
+  /// No description provided for @resetEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mail'**
+  String get resetEmailHint;
+
+  /// No description provided for @resetSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Code'**
+  String get resetSendCode;
+
+  /// No description provided for @otpResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Verification code'**
+  String get otpResetTitle;
+
+  /// No description provided for @otpResetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A 6-digit code has been sent to your email. Please enter it below to reset your password.'**
+  String get otpResetSubtitle;
+
+  /// No description provided for @otpResetContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get otpResetContinue;
+
+  /// No description provided for @newPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Password'**
+  String get newPasswordTitle;
+
+  /// No description provided for @newPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure your new password is strong'**
+  String get newPasswordSubtitle;
+
+  /// No description provided for @newPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPasswordLabel;
+
+  /// No description provided for @newPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new password'**
+  String get newPasswordHint;
+
+  /// No description provided for @newPasswordConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get newPasswordConfirm;
+
+  /// No description provided for @newPasswordSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password reset successfully'**
+  String get newPasswordSuccess;
+
+  /// No description provided for @newPasswordError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reset password. Please try again.'**
+  String get newPasswordError;
+
+  /// No description provided for @otpInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid OTP. Please try again.'**
+  String get otpInvalid;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

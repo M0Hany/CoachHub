@@ -14,14 +14,10 @@ import '../../../../../../../l10n/app_localizations.dart';
 class NutritionPlanLayoutValues {
   // English (LTR) values
   static const ltrBreakfastFlex = 5;
-  static const ltrLunchFlex = 3;
+  static const ltrLunchFlex = 4;
   static const ltrDinnerFlex = 4;
   static const ltrSnackFlex = 4;
 
-  static const ltrBreakfastMargin = EdgeInsetsDirectional.symmetric(horizontal: 18);
-  static const ltrLunchMargin = EdgeInsetsDirectional.symmetric(horizontal: 5);
-  static const ltrDinnerMargin = EdgeInsetsDirectional.only(start: 25);
-  static const ltrSnackMargin = EdgeInsetsDirectional.only(start: 30);
 
   // Arabic (RTL) values - starting with same values as English, adjust as needed
   static const rtlBreakfastFlex = 5;
@@ -29,10 +25,6 @@ class NutritionPlanLayoutValues {
   static const rtlDinnerFlex = 5;
   static const rtlSnackFlex = 5;
 
-  static const rtlBreakfastMargin = EdgeInsetsDirectional.only(start: 20);
-  static const rtlLunchMargin = EdgeInsetsDirectional.only(start: 30);
-  static const rtlDinnerMargin = EdgeInsetsDirectional.only(start: 34);
-  static const rtlSnackMargin = EdgeInsetsDirectional.only(start: 34);
 
   // Get values based on text direction
   static int getBreakfastFlex(TextDirection direction) =>
@@ -43,15 +35,6 @@ class NutritionPlanLayoutValues {
       direction == TextDirection.ltr ? ltrDinnerFlex : rtlDinnerFlex;
   static int getSnackFlex(TextDirection direction) =>
       direction == TextDirection.ltr ? ltrSnackFlex : rtlSnackFlex;
-
-  static EdgeInsetsDirectional getBreakfastMargin(TextDirection direction) =>
-      direction == TextDirection.ltr ? ltrBreakfastMargin : rtlBreakfastMargin;
-  static EdgeInsetsDirectional getLunchMargin(TextDirection direction) =>
-      direction == TextDirection.ltr ? ltrLunchMargin : rtlLunchMargin;
-  static EdgeInsetsDirectional getDinnerMargin(TextDirection direction) =>
-      direction == TextDirection.ltr ? ltrDinnerMargin : rtlDinnerMargin;
-  static EdgeInsetsDirectional getSnackMargin(TextDirection direction) =>
-      direction == TextDirection.ltr ? ltrSnackMargin : rtlSnackMargin;
 }
 
 class NutritionPlanCalendarScreen extends StatefulWidget {
@@ -65,6 +48,7 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
   late final PageController _pageController;
   int _currentPage = 0;
   static const int daysPerPage = 5;
+  int? _planId;
 
   @override
   void initState() {
@@ -76,11 +60,57 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
       if (extra != null) {
         final planId = extra['planId'] as int?;
         if (planId != null) {
+          _planId = planId;
           final provider = context.read<NutritionPlanProvider>();
           provider.setNutritionPlanId(planId);
         }
       }
     });
+  }
+
+  Future<void> _showDeleteConfirmationDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(l10n.deletePlan),
+          content: Text(l10n.deletePlanConfirmation),
+          actions: <Widget>[
+            TextButton(
+              child: Text(l10n.cancel),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(color: Colors.red),
+              ),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                try {
+                  if (_planId != null) {
+                    await context.read<NutritionPlanProvider>().deletePlan(_planId!);
+                    if (mounted) {
+                      context.go('/coach/plans'); // Go back to plans list
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -92,16 +122,37 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenHeight = MediaQuery.of(context).size.height;
     
+    // Calculate cell height based on screen size
+    final availableHeight = screenHeight - 
+        kToolbarHeight -  // AppBar
+        140 -            // Title section (including padding)
+        kBottomNavigationBarHeight - 
+        100 -           // Page indicator section
+        32;            // Extra padding
+    
+    final cellHeight = (availableHeight / 5).clamp(80.0, 100.0);  // Min 80, max 100
+
     return Consumer<NutritionPlanProvider>(
       builder: (context, provider, child) {
         final plan = provider.nutritionPlan;
         if (plan == null) {
           return Scaffold(
+            backgroundColor: AppTheme.mainBackgroundColor,
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+            ),
             body: Center(child: Text(l10n.noPlanData)),
           );
         }
 
+        final totalHeight = min(daysPerPage, plan.duration - (_currentPage * daysPerPage)) * cellHeight;
         final totalPages = (plan.duration / daysPerPage).ceil();
 
         return Scaffold(
@@ -113,6 +164,15 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: _showDeleteConfirmationDialog,
+              ),
+            ],
           ),
           body: Stack(
             children: [
@@ -127,10 +187,16 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                plan.title,
-                                style: AppTheme.headerLarge.copyWith(
-                                  color: AppTheme.textDark
+                              Flexible(
+                                child: Text(
+                                  plan.title,
+                                  textAlign: TextAlign.center,
+                                  style: AppTheme.headerLarge.copyWith(
+                                    color: AppTheme.textDark,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
                                 ),
                               ),
                             ],
@@ -191,115 +257,68 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                   // Headers and Calendar grid in a Column
                                   Column(
                                     children: [
-                                      // Headers row
-                                      Row(
-                  children: [
-                                          const SizedBox(width: 60),
-                    Expanded(
-                      child: Row(
-                        children: [
-                                                // Breakfast (longest)
-                                                Flexible(
-                                                  flex: NutritionPlanLayoutValues.getBreakfastFlex(Directionality.of(context)),
-                                                  child: Container(
-                                                    margin: NutritionPlanLayoutValues.getBreakfastMargin(Directionality.of(context)),
-                                                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary,
-                                                      borderRadius: const BorderRadius.only(
-                                                        topLeft: Radius.circular(8),
-                                                        topRight: Radius.circular(8),
+                                      // Headers row with container to ensure alignment
+                                      Container(
+                                        height: 32,  // Fixed height for header
+                                        child: Row(
+                                          children: [
+                                            const SizedBox(width: 60),
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  // Breakfast
+                                                  Expanded(
+                                                    flex: NutritionPlanLayoutValues.getBreakfastFlex(Directionality.of(context)),
+                                                    child: Center(
+                                                      child: Text(
+                                                        l10n.breakfast,
+                                                        style: AppTheme.bodySmall,
                                                       ),
                                                     ),
-                            child: Text(
-                              l10n.breakfast,
-                                                      style: AppTheme.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                                        color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                                                ),
-                                                // Lunch
-                                                Flexible(
-                                                  flex: NutritionPlanLayoutValues.getLunchFlex(Directionality.of(context)),
-                                                  child: Container(
-                                                    margin: NutritionPlanLayoutValues.getLunchMargin(Directionality.of(context)),
-                                                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary,
-                                                      borderRadius: const BorderRadius.only(
-                                                        topLeft: Radius.circular(8),
-                                                        topRight: Radius.circular(8),
+                                                  ),
+                                                  // Lunch
+                                                  Expanded(
+                                                    flex: NutritionPlanLayoutValues.getLunchFlex(Directionality.of(context)),
+                                                    child: Center(
+                                                      child: Text(
+                                                        l10n.lunch,
+                                                        style: AppTheme.bodySmall,
                                                       ),
                                                     ),
-                            child: Text(
-                              l10n.lunch,
-                                                      style: AppTheme.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                                        color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                                                ),
-                                                // Dinner
-                                                Flexible(
-                                                  flex: NutritionPlanLayoutValues.getDinnerFlex(Directionality.of(context)),
-                                                  child: Container(
-                                                    margin: NutritionPlanLayoutValues.getDinnerMargin(Directionality.of(context)),
-                                                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary,
-                                                      borderRadius: const BorderRadius.only(
-                                                        topLeft: Radius.circular(8),
-                                                        topRight: Radius.circular(8),
+                                                  ),
+                                                  // Dinner
+                                                  Expanded(
+                                                    flex: NutritionPlanLayoutValues.getDinnerFlex(Directionality.of(context)),
+                                                    child: Center(
+                                                      child: Text(
+                                                        l10n.dinner,
+                                                        style: AppTheme.bodySmall,
                                                       ),
                                                     ),
-                            child: Text(
-                              l10n.dinner,
-                                                      style: AppTheme.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                                        color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                                                ),
-                                                // Snack
-                                                Flexible(
-                                                  flex: NutritionPlanLayoutValues.getSnackFlex(Directionality.of(context)),
-                                                  child: Container(
-                                                    margin: NutritionPlanLayoutValues.getSnackMargin(Directionality.of(context)),
-                                                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: AppColors.primary,
-                                                      borderRadius: const BorderRadius.only(
-                                                        topLeft: Radius.circular(8),
-                                                        topRight: Radius.circular(8),
+                                                  ),
+                                                  // Snack
+                                                  Expanded(
+                                                    flex: NutritionPlanLayoutValues.getSnackFlex(Directionality.of(context)),
+                                                    child: Center(
+                                                      child: Text(
+                                                        l10n.snack,
+                                                        style: AppTheme.bodySmall,
                                                       ),
                                                     ),
-                            child: Text(
-                              l10n.snack,
-                                                      style: AppTheme.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                                        color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                                      ), // Calendar grid
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Calendar grid
                                       Row(
                                         children: [
+                                          // Days column
                                           Container(
                                             width: 60,
-                                            height: min(daysPerPage, plan.duration - (pageIndex * daysPerPage)) * 100.0,
+                                            height: totalHeight,
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius: BorderRadius.circular(15),
@@ -315,7 +334,7 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     SizedBox(
-                                                      height: 100,
+                                                      height: cellHeight,
                                                       child: Center(
                                                         child: Column(
                                                           mainAxisAlignment: MainAxisAlignment.center,
@@ -348,12 +367,13 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                               },
                                             ),
                                           ),
-              Expanded(
+                                          // Meals grid
+                                          Expanded(
                                             child: Container(
-                                              height: min(daysPerPage, plan.duration - (pageIndex * daysPerPage)) * 100.0,
-                                              margin: const EdgeInsetsDirectional.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
+                                              height: totalHeight,
+                                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
                                                 borderRadius: BorderRadius.circular(15),
                                               ),
                                               child: ListView.builder(
@@ -369,28 +389,27 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                                     children: [
                                                       GestureDetector(
                                                         behavior: HitTestBehavior.opaque,
-                            onTap: () {
+                                                        onTap: () {
                                                           provider.selectDay(dayNumber - 1);
-                              context.push('/coach/plans/nutrition/day-details');
-                            },
+                                                          context.push('/coach/plans/nutrition/day-details');
+                                                        },
                                                         child: SizedBox(
-                                                          height: 100,
-                              child: Row(
-                                children: [
-                                                              // Match flex values with headers
-                                                              Flexible(
+                                                          height: cellHeight,
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
                                                                 flex: NutritionPlanLayoutValues.getBreakfastFlex(Directionality.of(context)),
                                                                 child: _buildMealCell(day.breakfast, false),
                                                               ),
-                                                              Flexible(
+                                                              Expanded(
                                                                 flex: NutritionPlanLayoutValues.getLunchFlex(Directionality.of(context)),
                                                                 child: _buildMealCell(day.lunch, false),
                                                               ),
-                                                              Flexible(
+                                                              Expanded(
                                                                 flex: NutritionPlanLayoutValues.getDinnerFlex(Directionality.of(context)),
                                                                 child: _buildMealCell(day.dinner, false),
                                                               ),
-                                                              Flexible(
+                                                              Expanded(
                                                                 flex: NutritionPlanLayoutValues.getSnackFlex(Directionality.of(context)),
                                                                 child: _buildMealCell(day.snacks, true),
                                                               ),
@@ -407,9 +426,9 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                                     ],
                                                   );
                                                 },
-                                      ),
-                                    ),
-                                  ),
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ],
@@ -417,10 +436,10 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                                 ],
                               ),
                             ),
-                    );
-                  },
-                ),
-              ),
+                          );
+                        },
+                      ),
+                    ),
                     if (totalPages > 1)
               Padding(
                         padding: const EdgeInsets.only(bottom: 100),
