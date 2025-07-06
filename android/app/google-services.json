@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "427025130071",
+    "project_id": "coachhub-fddd4",
+    "storage_bucket": "coachhub-fddd4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:427025130071:android:2e36cb7180174144f27912",
+        "android_client_info": {
+          "package_name": "com.example.coachhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQSY0RWNxzYd3w3L7XEcfM_DQq8kDKIgk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
