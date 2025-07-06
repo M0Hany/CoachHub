@@ -18,6 +18,14 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool _hasNavigated = false;
+  AuthProvider? _authProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only assign if null to avoid reassigning on rebuilds
+    _authProvider ??= Provider.of<AuthProvider>(context, listen: false);
+  }
 
   @override
   void initState() {
@@ -37,15 +45,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     // Set up auth state listener
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final authProvider = _authProvider ?? Provider.of<AuthProvider>(context, listen: false);
       authProvider.addListener(_handleAuthStateChange);
     });
   }
 
   @override
   void dispose() {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.removeListener(_handleAuthStateChange);
+    _authProvider?.removeListener(_handleAuthStateChange);
     _controller.dispose();
     super.dispose();
   }
@@ -53,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void _handleAuthStateChange() {
     if (!mounted || _hasNavigated) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = _authProvider ?? Provider.of<AuthProvider>(context, listen: false);
     final status = authProvider.status;
     final userType = authProvider.userType;
 
@@ -84,7 +91,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (!mounted) return;
     
     // Get the auth provider
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = _authProvider ?? Provider.of<AuthProvider>(context, listen: false);
     
     // Force a refresh of the auth state
     await authProvider.refreshAuthState();
