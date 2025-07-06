@@ -15,6 +15,21 @@ class CoachHomeScreen extends StatefulWidget {
 
   @override
   State<CoachHomeScreen> createState() => _CoachHomeScreenState();
+  
+  // Static callback to remove trainee from any instance
+  static Function(int)? _removeTraineeCallback;
+  
+  // Static method to set the callback
+  static void setRemoveTraineeCallback(Function(int) callback) {
+    _removeTraineeCallback = callback;
+  }
+  
+  // Static method to remove trainee from the current instance
+  static void removeTrainee(int traineeId) {
+    if (_removeTraineeCallback != null) {
+      _removeTraineeCallback!(traineeId);
+    }
+  }
 }
 
 class _CoachHomeScreenState extends State<CoachHomeScreen> {
@@ -25,11 +40,22 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
   int _totalClients = 0;
   int _totalSubscriptionRequests = 0;
   List<Map<String, dynamic>> _subscriptionRequests = [];
+  
+  // Method to remove a trainee from local state when subscription ends
+  void removeTraineeFromLocalState(int traineeId) {
+    setState(() {
+      _clients.removeWhere((client) => client['id'] == traineeId);
+      _totalClients = _clients.length;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    
+    // Set up the callback for removing trainees
+    CoachHomeScreen.setRemoveTraineeCallback(removeTraineeFromLocalState);
   }
 
   Future<void> _loadData() async {
@@ -175,10 +201,10 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
                                   onPressed: () {
                                     context.push('/coach/subscription-requests');
                                   },
-                                  icon: const Icon(
-                                    Icons.person_add_outlined,
-                                    color: AppColors.primary,
-                                    size: 24,
+                                  icon: Image.asset(
+                                    'assets/icons/navigation/Requests.png',
+                                    width: 28,
+                                    height: 28,
                                   ),
                                 ),
                                 if (_totalSubscriptionRequests > 0)

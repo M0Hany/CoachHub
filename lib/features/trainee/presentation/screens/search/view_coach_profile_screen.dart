@@ -6,6 +6,7 @@ import '../../../../../core/constants/enums.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/network/http_client.dart';
 import '../../../../../features/coach/data/models/coach_model.dart';
+import 'package:go_router/go_router.dart';
 
 class ViewCoachProfileScreen extends StatefulWidget {
   final String coachId;
@@ -23,6 +24,7 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
   bool _isLoading = true;
   String? _error;
   CoachModel? _coach;
+  Map<String, dynamic>? _recentReview;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
         final profileData = response.data['data']['profile'] as Map<String, dynamic>;
         setState(() {
           _coach = CoachModel.fromJson(profileData);
+          _recentReview = profileData['recentReview'] as Map<String, dynamic>?;
           _isLoading = false;
         });
       } else {
@@ -133,6 +136,32 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
     );
   }
 
+  String _calculateTimeAgo(String? createdAt) {
+    if (createdAt == null) return '';
+    
+    try {
+      final createdDate = DateTime.parse(createdAt);
+      final now = DateTime.now();
+      final difference = now.difference(createdDate);
+      
+      if (difference.inMinutes < 60) {
+        return '${difference.inMinutes} min';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours} h';
+      } else if (difference.inDays < 30) {
+        return '${difference.inDays} d';
+      } else if (difference.inDays < 365) {
+        final months = (difference.inDays / 30).floor();
+        return '${months} month${months > 1 ? 's' : ''}';
+      } else {
+        final years = (difference.inDays / 365).floor();
+        return '${years} year${years > 1 ? 's' : ''}';
+      }
+    } catch (e) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -178,6 +207,7 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.mainBackgroundColor,
+      extendBody: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
@@ -189,9 +219,10 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.chat_bubble_outline,
-              color: AppColors.primary,
+            icon: Image.asset(
+              'assets/icons/navigation/Chats Inactive.png',
+              width: 28,
+              height: 28,
             ),
             onPressed: () {
               // TODO: Implement chat functionality
@@ -200,7 +231,9 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
         child: Column(
           children: [
             // Profile Image and Rating
@@ -347,10 +380,7 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(20),
-                  topLeft: Radius.circular(20),
-                ),
+                  borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.1),
@@ -369,49 +399,56 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
                         l10n.posts,
                         style: AppTheme.bodyLarge,
                       ),
+                        if (_coach!.recentPost != null)
                       TextButton(
                         onPressed: () {
-                          // TODO: Implement show all posts
+                          context.push(
+                            '/trainee/coach/${widget.coachId}/posts',
+                            extra: {
+                              'coachImageUrl': _coach!.imageUrl,
+                              'coachFullName': _coach!.fullName,
+                            },
+                          );
                         },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          l10n.showAllPosts,
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
+                        child: Text(l10n.showAllPosts),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   if (_coach!.recentPost != null)
                     Container(
+                        padding: const EdgeInsets.all(12),
                       child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildProfileImage(_coach!.imageUrl, radius: 20),
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: (() {
+                                    String? imageUrl = _coach!.imageUrl;
+                                    String? fullUrl = (imageUrl != null && imageUrl.isNotEmpty)
+                                        ? (imageUrl.startsWith('http') ? imageUrl : 'https://coachhub-production.up.railway.app/$imageUrl')
+                                        : null;
+                                    return fullUrl != null
+                                        ? NetworkImage(fullUrl)
+                                        : const AssetImage('assets/images/default_profile.jpg') as ImageProvider;
+                                  })(),
+                                ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
                                       children: [
                                         Text(
                                           _coach!.fullName,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
-                                          ),
+                                          fontSize: 12,
                                         ),
-                                        const SizedBox(width: 8),
+                                      ),
                                         Text(
-                                          l10n.timeAgo('2h'), // TODO: Calculate actual time
+                                        _calculateTimeAgo(_coach!.recentPost!.createdAt.toIso8601String()),
                                           style: const TextStyle(
                                             color: Colors.grey,
                                             fontSize: 9,
@@ -419,36 +456,162 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 4),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                                     Text(
                                       _coach!.recentPost!.content,
-                                      textDirection: TextDirection.rtl,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            l10n.noPostsYet,
                                       style: const TextStyle(
-                                        fontSize: 10,
-                                        height: 1.5,
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
                                       ),
                                     ),
                                   ],
                                 ),
+              ),
+
+              // Reviews Section
+              Container(
+                margin: const EdgeInsets.only(left: 42, right: 42, top: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.reviews,
+                          style: AppTheme.bodyLarge,
+                        ),
+                        if (_recentReview != null)
+                          TextButton(
+                            onPressed: () {
+                              context.push(
+                                '/trainee/coach/${widget.coachId}/reviews',
+                                extra: {
+                                  'coachImageUrl': _coach!.imageUrl,
+                                  'coachFullName': _coach!.fullName,
+                                },
+                              );
+                            },
+                            child: Text(l10n.showAllReviews),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    if (_recentReview != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: (() {
+                                    String? imageUrl = _recentReview?['trainee']?['image_url'];
+                                    String? fullUrl = (imageUrl != null && imageUrl.isNotEmpty)
+                                        ? (imageUrl.startsWith('http') ? imageUrl : 'https://coachhub-production.up.railway.app/$imageUrl')
+                                        : null;
+                                    return fullUrl != null
+                                        ? NetworkImage(fullUrl)
+                                        : const AssetImage('assets/images/default_profile.jpg') as ImageProvider;
+                                  })(),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _recentReview?['trainee']?['full_name'] ?? 'Anonymous',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          ...(() {
+                                            final rating = (_recentReview?['rating'] ?? 0).toDouble();
+                                            final fullStars = rating.floor();
+                                            final hasHalfStar = (rating - fullStars) >= 0.5;
+                                            final remainingStars = (5 - fullStars - (hasHalfStar ? 1 : 0)).toInt();
+                                            return [
+                                              ...List.generate(fullStars, (index) => const Icon(Icons.star, size: 16, color: Colors.amber)),
+                                              if (hasHalfStar) const Icon(Icons.star_half, size: 16, color: Colors.amber),
+                                              ...List.generate(remainingStars, (index) => const Icon(Icons.star_border, size: 16, color: Colors.amber)),
+                                            ];
+                                          })(),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _recentReview?['comment'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
                               ),
-                            ],
                           ),
                         ],
                       ),
                     )
                   else
-                    Center(
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
                       child: Text(
-                        'No posts yet',
-                        style: AppTheme.bodyMedium.copyWith(
+                            l10n.noReviewsYet,
+                            style: const TextStyle(
                           color: Colors.grey,
-                        ),
+                              fontSize: 14,
+                            ),
+                          ),
                       ),
                     ),
                 ],
               ),
             ),
+              
+              // Bottom spacing to push content above navigation bar when scrolling
+              const SizedBox(height: 120),
           ],
+          ),
         ),
       ),
       bottomNavigationBar: const BottomNavBar(

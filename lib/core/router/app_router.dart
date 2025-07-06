@@ -17,9 +17,11 @@ import '../../features/auth/presentation/screens/reset/new_password_screen.dart'
 // Coach screens
 import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart' as coach;
 import '../../features/coach/presentation/screens/chat/coach_chats_screen.dart' as coach;
-import '../../features/coach/presentation/screens/coach_notifications_screen.dart';
+import '../../features/coach/presentation/screens/notifications/coach_notifications_screen.dart';
 import '../../features/coach/presentation/screens/home/coach_home_screen.dart';
 import '../../features/coach/presentation/screens/profile/coach_profile_screen.dart';
+import '../../features/coach/presentation/screens/posts/coach_posts_screen.dart';
+import '../../features/coach/presentation/screens/posts/coach_post_focus_screen.dart';
 import '../../features/coach/presentation/screens/settings/coach_settings_screen.dart';
 import '../../features/coach/presentation/screens/plans/coach_plans_screen.dart';
 import '../../features/coach/presentation/screens/plans/create_plan_screen.dart';
@@ -33,6 +35,7 @@ import '../../features/trainee/presentation/screens/search/view_coach_profile_sc
 import '../../features/coach/presentation/screens/coach_expertise_screen.dart';
 import '../../features/coach/presentation/screens/coach_subscription_requests_screen.dart';
 import '../../features/coach/presentation/screens/view_trainee_profile_screen.dart';
+import '../../features/coach/presentation/screens/reviews/coach_reviews_screen.dart';
 
 // Trainee screens
 import '../../features/trainee/presentation/screens/chat/trainee_chats_screen.dart' as trainee;
@@ -48,6 +51,9 @@ import '../../features/trainee/presentation/screens/workout/exercise_instruction
 import '../../features/trainee/presentation/screens/health/trainee_health_data_screen.dart';
 import '../../features/trainee/presentation/screens/nutrition/nutrition_plan_details_screen.dart';
 import '../../features/trainee/presentation/screens/nutrition/meal_details_screen.dart';
+import '../../features/trainee/presentation/screens/search/trainee_coach_posts_screen.dart';
+import '../../features/trainee/presentation/screens/search/trainee_coach_post_focus_screen.dart';
+import '../../features/trainee/presentation/screens/search/trainee_coach_reviews_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
@@ -93,7 +99,8 @@ final GoRouter appRouter = GoRouter(
     final isResetRoute = currentLocation.startsWith('/reset/');
     final isPublicRoute = currentLocation == '/login' ||
         currentLocation == '/register' ||
-        currentLocation == '/onboarding';
+        currentLocation == '/onboarding' ||
+        isResetRoute; // Include reset routes as public routes
 
     // Auth flow routes
     final isAuthFlowRoute = currentLocation == '/verify-otp' ||
@@ -124,6 +131,11 @@ final GoRouter appRouter = GoRouter(
           if (!hasSeenOnboarding) {
             return '/onboarding';
           }
+          return userType == UserType.coach ? '/coach/home' : '/trainee/home';
+        }
+
+        // If authenticated user is on a reset route, redirect to home
+        if (isResetRoute) {
           return userType == UserType.coach ? '/coach/home' : '/trainee/home';
         }
 
@@ -324,6 +336,41 @@ final GoRouter appRouter = GoRouter(
           path: 'meal-details',
           builder: (context, state) => const MealDetailsScreen(),
         ),
+        GoRoute(
+          path: 'coach/:coachId/posts',
+          builder: (context, state) {
+            final coachId = state.pathParameters['coachId']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return TraineeCoachPostsScreen(
+              coachId: coachId,
+              coachImageUrl: extra?['coachImageUrl'],
+              coachFullName: extra?['coachFullName'],
+            );
+          },
+        ),
+        GoRoute(
+          path: 'coach/:coachId/posts/focus',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return TraineeCoachPostFocusScreen(
+              post: extra['post'],
+              coachImageUrl: extra['coachImageUrl'],
+              coachFullName: extra['coachFullName'],
+            );
+          },
+        ),
+        GoRoute(
+          path: 'coach/:coachId/reviews',
+          builder: (context, state) {
+            final coachId = state.pathParameters['coachId']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return TraineeCoachReviewsScreen(
+              coachId: coachId,
+              coachImageUrl: extra?['coachImageUrl'],
+              coachFullName: extra?['coachFullName'],
+            );
+          },
+        ),
       ],
     ),
 
@@ -409,6 +456,17 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const CoachProfileScreen(),
         ),
         GoRoute(
+          path: 'posts',
+          builder: (context, state) => const CoachPostsScreen(),
+        ),
+        GoRoute(
+          path: 'posts/focus',
+          builder: (context, state) {
+            final post = state.extra as Map<String, dynamic>;
+            return CoachPostFocusScreen(post: post['post']);
+          },
+        ),
+        GoRoute(
           path: 'chats',
           builder: (context, state) => const coach.CoachChatsScreen(),
         ),
@@ -451,6 +509,10 @@ final GoRouter appRouter = GoRouter(
             final traineeId = int.tryParse(state.pathParameters['id'] ?? '') ?? -1;
             return ViewTraineeProfileScreen(traineeId: traineeId);
           },
+        ),
+        GoRoute(
+          path: 'reviews',
+          builder: (context, state) => const CoachReviewsScreen(),
         ),
       ],
     ),

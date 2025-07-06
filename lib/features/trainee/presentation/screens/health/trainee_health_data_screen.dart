@@ -414,10 +414,10 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
                       final authProvider = context.read<AuthProvider>();
                       final request = TraineeHealthDataUpdateRequest(
                                 goalIds: _selectedGoalIds,
-                                weight: double.tryParse(_weightController.text) ?? 0.0,
-                                height: double.tryParse(_heightController.text) ?? 0.0,
-                                fatPercentage: _fatPercentage,
-                                musclePercentage: _musclePercentage,
+                                weight: (double.tryParse(_weightController.text) ?? 0.0).roundToDouble(),
+                                height: (double.tryParse(_heightController.text) ?? 0.0).roundToDouble(),
+                                fatPercentage: double.parse(_fatPercentage.toStringAsFixed(2)),
+                                musclePercentage: double.parse(_musclePercentage.toStringAsFixed(2)),
                                 age: int.tryParse(_ageController.text) ?? 0,
                                 hypertension: _hasHypertension,
                                 diabetes: _hasDiabetes,

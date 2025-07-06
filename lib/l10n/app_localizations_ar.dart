@@ -323,7 +323,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get userType => 'نوع المستخدم';
 
   @override
-  String get coach => 'مدرب';
+  String get coach => 'المدرب';
 
   @override
   String get trainee => 'متدرب';
@@ -655,6 +655,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nutrition_plans_days => 'أيام';
 
   @override
+  String get nutrition_plans_day => 'Day';
+
+  @override
   String get checkYourEmail => 'تحقق من بريدك الإلكتروني';
 
   @override
@@ -682,7 +685,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deletePlan => 'حذف الخطة';
 
   @override
-  String get deletePlanConfirmation => 'هل أنت متأكد أنك تريد حذف هذه الخطة؟';
+  String get deletePlanConfirmation => 'Are you sure you want to delete this plan?';
+
+  @override
+  String get deletePlanConfirm => 'هل أنت متأكد أنك تريد حذف هذه الخطة؟';
 
   @override
   String get delete => 'حذف';
@@ -836,4 +842,115 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get otpInvalid => 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+
+  @override
+  String get noPostsYet => 'لا توجد منشورات حتى الآن';
+
+  @override
+  String get reviews => 'التقييمات';
+
+  @override
+  String get showAllReviews => 'عرض كل التقييمات';
+
+  @override
+  String get noReviewsYet => 'لا توجد تقييمات حتى الآن';
+
+  @override
+  String get createPost => 'إنشاء منشور';
+
+  @override
+  String get seeMore => 'عرض المزيد';
+
+  @override
+  String get whatsOnYourMind => 'ماذا يدور في ذهنك؟';
+
+  @override
+  String get post => 'نشر';
+
+  @override
+  String get editPost => 'تعديل المنشور';
+
+  @override
+  String get deletePost => 'حذف المنشور';
+
+  @override
+  String get update => 'تحديث';
+
+  @override
+  String get deletePostConfirm => 'هل أنت متأكد أنك تريد حذف هذا المنشور؟';
+
+  @override
+  String get makeFirstPost => 'أنشئ أول منشور لك';
+
+  @override
+  String get unassignPlan => 'إلغاء تعيين الخطة';
+
+  @override
+  String get unassignPlanConfirmTitle => 'إلغاء تعيين الخطة';
+
+  @override
+  String get unassignPlanConfirmMessage => 'هل أنت متأكد أنك تريد إلغاء تعيين هذه الخطة من المتدرب؟';
+
+  @override
+  String get unassignPlanSuccess => 'تم إلغاء تعيين الخطة بنجاح';
+
+  @override
+  String get unassignPlanError => 'فشل في إلغاء تعيين الخطة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get endSubscription => 'إنهاء الاشتراك';
+
+  @override
+  String get endSubscriptionTitle => 'إنهاء الاشتراك';
+
+  @override
+  String get endSubscriptionMessage => 'هل أنت متأكد أنك تريد إنهاء اشتراك هذا المتدرب؟';
+
+  @override
+  String get endSubscriptionSuccess => 'تم إنهاء الاشتراك بنجاح';
+
+  @override
+  String get endSubscriptionError => 'فشل في إنهاء الاشتراك. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get unsubscribeTitle => 'إلغاء الاشتراك من المدرب';
+
+  @override
+  String get unsubscribeMessage => 'هل أنت متأكد أنك تريد إلغاء الاشتراك من هذا المدرب؟';
+
+  @override
+  String get unsubscribeSuccess => 'تم إلغاء الاشتراك بنجاح';
+
+  @override
+  String get unsubscribeError => 'فشل في إلغاء الاشتراك. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get rateCoach => 'قيّم المدرب';
+
+  @override
+  String get writeReview => 'اكتب تقييمك...';
+
+  @override
+  String get save => 'حفظ';
+
+  @override
+  String get reviewSuccess => 'تم إرسال التقييم بنجاح';
+
+  @override
+  String get reviewError => 'فشل في إرسال التقييم. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get reviewAlreadySubmitted => 'لقد قمت بإرسال تقييم لهذا المدرب مسبقاً';
+
+  @override
+  String get suggestedExercises => 'التمارين المقترحة';
+
+  @override
+  String get suggestedFood => 'الطعام المقترح';
+
+  @override
+  String get noSuggestedExercises => 'لا توجد تمارين مقترحة متاحة';
+
+  @override
+  String get noSuggestedFood => 'لا يوجد طعام مقترح متاح';
 }

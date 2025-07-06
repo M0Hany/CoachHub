@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
+import 'dart:math';
 
 // Language-specific layout values
 class NutritionPlanLayoutValues {
@@ -68,8 +70,10 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
   Map<String, dynamic>? _traineeProfile;
   Map<String, dynamic>? _workoutPlan;
   Map<String, dynamic>? _nutritionPlan;
+  Map<String, dynamic>? _coachProfile;
   int _currentWorkoutDay = 1;
   int _currentNutritionDay = 1;
+  List<Map<String, dynamic>> _healthHistory = [];
 
   @override
   void initState() {
@@ -89,6 +93,33 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
 
       if (profileResponse.data?['status'] == 'success') {
         _traineeProfile = profileResponse.data!['data']['profile'];
+      }
+
+      // Get health history data
+      try {
+        final healthResponse = await httpClient.get<Map<String, dynamic>>(
+          '/api/trainee/health',
+        );
+
+        if (healthResponse.data?['status'] == 'success') {
+          final healthData = healthResponse.data!['data'] as List<dynamic>;
+          _healthHistory = healthData
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+          
+          // Sort by ID (or created_at if ID is not available)
+          _healthHistory.sort((a, b) {
+            if (a['id'] != null && b['id'] != null) {
+              return (a['id'] as int).compareTo(b['id'] as int);
+            } else if (a['created_at'] != null && b['created_at'] != null) {
+              return DateTime.parse(a['created_at']).compareTo(DateTime.parse(b['created_at']));
+            }
+            return 0;
+          });
+        }
+      } catch (e) {
+        print('Failed to fetch health history: $e');
+        _healthHistory = [];
       }
 
       // Get assigned workout plan
@@ -161,11 +192,98 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
           }
         }
       }
+
+      // Get subscribed coach
+      try {
+        final coachResponse = await httpClient.get<Map<String, dynamic>>(
+          '/api/subscription/my-coach',
+        );
+
+        if (coachResponse.data?['status'] == 'success') {
+          final coachId = coachResponse.data!['data']['coach_id'];
+          if (coachId != null) {
+            final coachProfileResponse = await httpClient.get<Map<String, dynamic>>(
+              '/api/profile/$coachId',
+            );
+
+            if (coachProfileResponse.data?['status'] == 'success') {
+              _coachProfile = coachProfileResponse.data!['data']['profile'];
+            }
+          } else {
+            _coachProfile = null;
+          }
+        } else {
+          _coachProfile = null;
+        }
+      } catch (e) {
+        // Coach data is optional, so we don't set error state
+        print('Failed to fetch coach data: $e');
+        _coachProfile = null;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Alternative method to refresh coach data specifically
+  Future<void> _refreshCoachData() async {
+    try {
+      final httpClient = HttpClient();
+      final coachResponse = await httpClient.get<Map<String, dynamic>>(
+        '/api/subscription/my-coach',
+      );
+
+      if (mounted) {
+        setState(() {
+          if (coachResponse.data?['status'] == 'success') {
+            final coachId = coachResponse.data!['data']['coach_id'];
+            if (coachId != null) {
+              // We'll fetch the coach profile in a separate call
+              _fetchCoachProfile(coachId);
+            } else {
+              _coachProfile = null;
+            }
+          } else {
+            _coachProfile = null;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _coachProfile = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchCoachProfile(int coachId) async {
+    try {
+      final httpClient = HttpClient();
+      final coachProfileResponse = await httpClient.get<Map<String, dynamic>>(
+        '/api/profile/$coachId',
+      );
+
+      if (mounted) {
+        setState(() {
+          if (coachProfileResponse.data?['status'] == 'success') {
+            _coachProfile = coachProfileResponse.data!['data']['profile'];
+          } else {
+            _coachProfile = null;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _coachProfile = null;
+        });
       }
     }
   }
@@ -553,6 +671,110 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
                       ),
                       const SizedBox(height: 18),
 
+                      // Coach section
+                      if (_coachProfile != null) ...[
+                        Text(
+                          l10n.coach,
+                          style: AppTheme.headerSmall,
+                        ),
+                        const SizedBox(height: 16),
+                        // Coach box with badge
+                        GestureDetector(
+                          onTap: () {
+                            if (_coachProfile != null && _coachProfile!['id'] != null) {
+                              context.push('/trainee/coach/${_coachProfile!['id']}');
+                            }
+                          },
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      spreadRadius: 1,
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildProfileImage(_coachProfile, radius: 25),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        _coachProfile!['full_name'] ?? '',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    // Chats icon
+                                    GestureDetector(
+                                      onTap: () {
+                                        // TODO: Open chat with coach
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        child: Image.asset(
+                                          'assets/icons/navigation/Chats Inactive.png',
+                                          width: 28,
+                                          height: 28,
+                                        ),
+                                      ),
+                                    ),
+                                    // Review icon
+                                    GestureDetector(
+                                      onTap: () {
+                                        _showRatingDialog(context);
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        child: Image.asset(
+                                          'assets/icons/navigation/Rating.png',
+                                          width: 28,
+                                          height: 28,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Red X icon (top right badge)
+                              Positioned(
+                                top: -8,
+                                right: -8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _showUnsubscribeDialog(context);
+                                  },
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
                       // Dashboard title
                       Text(
                         l10n.dashboard,
@@ -597,6 +819,7 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
                         currentFat: double.tryParse(_traineeProfile?['body_fat']?.toString() ?? '0') ?? 0,
                         currentWeight: double.tryParse(_traineeProfile?['weight']?.toString() ?? '0') ?? 0,
                         currentMuscle: double.tryParse(_traineeProfile?['body_muscle']?.toString() ?? '0') ?? 0,
+                        healthHistory: _healthHistory,
                       ),
                     ],
                   ),
@@ -624,7 +847,7 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
         Container(
           width: 60,
           height: 60,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.accent,
             shape: BoxShape.circle,
           ),
@@ -707,16 +930,217 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
           : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
     );
   }
+
+  void _showUnsubscribeDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.unsubscribeTitle),
+        content: Text(l10n.unsubscribeMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _unsubscribeFromCoach(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _unsubscribeFromCoach(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.patch<Map<String, dynamic>>(
+        '/api/subscription/unsubscribe',
+        options: Options(
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        ),
+      );
+      
+      if (response.data?['status'] == 'success') {
+        // Immediately clear the coach data and update UI
+        if (mounted) {
+          setState(() {
+            _coachProfile = null;
+          });
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.unsubscribeSuccess),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+              left: 16,
+              right: 16,
+            ),
+          ),
+        );
+        
+        // Optionally refresh all data in the background
+        _refreshCoachData();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.data?['message'] ?? l10n.unsubscribeError),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+              left: 16,
+              right: 16,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.unsubscribeError),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 80,
+            left: 16,
+            right: 16,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showRatingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => _RatingDialog(
+        coachName: _coachProfile?['full_name'] ?? '',
+        coachId: _coachProfile?['id'],
+        onRatingSubmitted: (rating, review) async {
+          await _submitReview(context, rating, review);
+        },
+      ),
+    );
+  }
+
+  Future<void> _submitReview(BuildContext context, int rating, String review) async {
+    final l10n = AppLocalizations.of(context)!;
+    final coachId = _coachProfile?['id'];
+    
+    if (coachId == null) {
+      _showFeedbackDialog(context, l10n.reviewError, false);
+      return;
+    }
+
+    try {
+      final httpClient = HttpClient();
+      final response = await httpClient.post<Map<String, dynamic>>(
+        '/api/review/create',
+        data: {
+          'rating': rating.toString(),
+          'comment': review,
+          'coach_id': coachId.toString(),
+        },
+        options: Options(
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        ),
+      );
+
+      if (response.data?['status'] == 'success') {
+        _showFeedbackDialog(context, l10n.reviewSuccess, true);
+      } else {
+        // Check for specific error message about already reviewed
+        final errorMessage = response.data?['message'] ?? '';
+        String displayMessage;
+        
+        if (errorMessage.contains('already made a review') || 
+            errorMessage.contains('already reviewed')) {
+          displayMessage = l10n.reviewAlreadySubmitted;
+        } else {
+          displayMessage = errorMessage.isNotEmpty ? errorMessage : l10n.reviewError;
+        }
+        
+        _showFeedbackDialog(context, displayMessage, false);
+      }
+    } catch (e) {
+      _showFeedbackDialog(context, l10n.reviewError, false);
+    }
+  }
+
+  void _showFeedbackDialog(BuildContext context, String message, bool isSuccess) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.mainBackgroundColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              isSuccess ? Icons.check_circle : Icons.error,
+              color: isSuccess ? Colors.green : Colors.red,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isSuccess ? 'Success' : 'Error',
+              style: AppTheme.headerSmall.copyWith(
+                color: isSuccess ? Colors.green : Colors.red,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isSuccess ? Colors.green : Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _HealthGraphSection extends StatefulWidget {
   final double currentFat;
   final double currentWeight;
   final double currentMuscle;
+  final List<Map<String, dynamic>> healthHistory;
+
   const _HealthGraphSection({
     required this.currentFat,
     required this.currentWeight,
     required this.currentMuscle,
+    required this.healthHistory,
   });
 
   @override
@@ -725,21 +1149,93 @@ class _HealthGraphSection extends StatefulWidget {
 
 class _HealthGraphSectionState extends State<_HealthGraphSection> {
   int selectedMetric = 0; // 0: Fats, 1: Weight, 2: Muscle
-  int selectedBar = 6; // Last bar is current value
+  int selectedBar = 0; // Default to first bar
 
   static const double _graphHeight = 130; // increased to fit chip
 
-  List<double> getMockData(int metric) {
-    // 6 mock values + 1 real value
+  List<double> getHealthData(int metric) {
+    List<double> data = [];
+    
+    // Add historical data
+    for (var healthRecord in widget.healthHistory) {
+      switch (metric) {
+        case 0: // Fats
+          data.add(double.tryParse(healthRecord['body_fat']?.toString() ?? '0') ?? 0);
+          break;
+        case 1: // Weight
+          data.add(double.tryParse(healthRecord['weight']?.toString() ?? '0') ?? 0);
+          break;
+        case 2: // Muscle
+          data.add(double.tryParse(healthRecord['body_muscle']?.toString() ?? '0') ?? 0);
+          break;
+      }
+    }
+    
+    // Add current data
     switch (metric) {
       case 0:
-        return [19.2, 18.9, 18.7, 18.5, 18.4, 18.3, widget.currentFat];
+        data.add(widget.currentFat);
+        break;
       case 1:
-        return [72.0, 71.8, 71.5, 71.2, 71.0, 70.8, widget.currentWeight];
+        data.add(widget.currentWeight);
+        break;
       case 2:
-        return [28.0, 28.2, 28.4, 28.6, 28.8, 29.0, widget.currentMuscle];
-      default:
-        return [0, 0, 0, 0, 0, 0, 0];
+        data.add(widget.currentMuscle);
+        break;
+    }
+    
+    // If no data, return current value only
+    if (data.isEmpty) {
+      switch (metric) {
+        case 0:
+          return [widget.currentFat];
+        case 1:
+          return [widget.currentWeight];
+        case 2:
+          return [widget.currentMuscle];
+        default:
+          return [0];
+      }
+    }
+    
+    return data;
+  }
+
+  List<String> getMonthLabels() {
+    List<String> labels = [];
+    
+    // Add historical month labels
+    for (var healthRecord in widget.healthHistory) {
+      try {
+        final date = DateTime.parse(healthRecord['created_at']);
+        labels.add(_getMonthAbbreviation(date.month));
+      } catch (e) {
+        labels.add('N/A');
+      }
+    }
+    
+    // Add current month label
+    final now = DateTime.now();
+    labels.add(_getMonthAbbreviation(now.month));
+    
+    return labels;
+  }
+
+  String _getMonthAbbreviation(int month) {
+    switch (month) {
+      case 1: return 'Jan';
+      case 2: return 'Feb';
+      case 3: return 'Mar';
+      case 4: return 'Apr';
+      case 5: return 'May';
+      case 6: return 'Jun';
+      case 7: return 'Jul';
+      case 8: return 'Aug';
+      case 9: return 'Sep';
+      case 10: return 'Oct';
+      case 11: return 'Nov';
+      case 12: return 'Dec';
+      default: return 'N/A';
     }
   }
 
@@ -772,8 +1268,8 @@ class _HealthGraphSectionState extends State<_HealthGraphSection> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final data = getMockData(selectedMetric);
-    final currentValue = data.last;
+    final data = getHealthData(selectedMetric);
+    final currentValue = data.isNotEmpty ? data.last : 0;
     final metricLabel = getMetricLabel(selectedMetric, l10n);
     final metricUnit = getMetricUnit(selectedMetric, l10n);
     final metricNames = [l10n.fatsLabel, l10n.weightLabel, l10n.muscleLabel];
@@ -797,7 +1293,7 @@ class _HealthGraphSectionState extends State<_HealthGraphSection> {
                   onTap: () {
                     setState(() {
                       selectedMetric = i;
-                      selectedBar = 6; // Reset to last bar (current value)
+                      selectedBar = data.length - 1; // Reset to last bar (current value)
                     });
                   },
                   child: Container(
@@ -832,60 +1328,255 @@ class _HealthGraphSectionState extends State<_HealthGraphSection> {
           ),
           const SizedBox(height: 16),
           // Graph
-          SizedBox(
-            height: _graphHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(7, (index) {
-                final isSelected = selectedBar == index;
-                final max = data.reduce((a, b) => a > b ? a : b);
-                final min = data.reduce((a, b) => a < b ? a : b);
-                final barHeight = max == min ? 0.7 : 0.3 + 0.7 * ((data[index] - min) / (max - min));
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedBar = index;
-                    });
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 30,
-                        height: (_graphHeight - 30) * barHeight,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppTheme.accent : const Color(0xFF434E81),
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      if (isSelected)
-                        Positioned(
-                          top: -38,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          Column(
+            children: [
+              SizedBox(
+                height: _graphHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(data.length, (index) {
+                    final isSelected = selectedBar == index;
+                    final max = data.reduce((a, b) => a > b ? a : b);
+                    final min = data.reduce((a, b) => a < b ? a : b);
+                    
+                    // Improved height calculation with better normalization
+                    double barHeight;
+                    if (max == min) {
+                      barHeight = 0.7; // Default height when all values are the same
+                    } else {
+                      // Calculate normalized value (0 to 1)
+                      final normalizedValue = (data[index] - min) / (max - min);
+                      
+                      // Apply a power function to amplify small differences
+                      // Using power of 0.7 to make differences more visible
+                      final amplifiedValue = pow(normalizedValue, 0.7);
+                      
+                      // Map to height range (0.3 to 1.0)
+                      barHeight = 0.3 + (0.7 * amplifiedValue);
+                    }
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedBar = index;
+                        });
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.bottomCenter,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 30,
+                            height: (_graphHeight - 30) * barHeight,
                             decoration: BoxDecoration(
-                              color: AppTheme.accent,
+                              color: isSelected ? AppTheme.accent : const Color(0xFF434E81),
                               borderRadius: BorderRadius.circular(25),
                             ),
-                            child: Text(
-                              '${data[index]}$metricUnit',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          if (isSelected)
+                            Positioned(
+                              top: -38,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accent,
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: Text(
+                                  '${data[index]}$metricUnit',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-            ),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Month labels
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: getMonthLabels().map((month) {
+                  return SizedBox(
+                    width: 30,
+                    child: Text(
+                      month,
+                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textLight),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RatingDialog extends StatefulWidget {
+  final String coachName;
+  final int coachId;
+  final Function(int rating, String review) onRatingSubmitted;
+
+  const _RatingDialog({
+    required this.coachName,
+    required this.coachId,
+    required this.onRatingSubmitted,
+  });
+
+  @override
+  State<_RatingDialog> createState() => _RatingDialogState();
+}
+
+class _RatingDialogState extends State<_RatingDialog> {
+  int _rating = 0;
+  final TextEditingController _reviewController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reviewController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Dialog(
+      backgroundColor: AppTheme.mainBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SizedBox(
+        width: 350,
+        height: 400,
+        child: Column(
+          children: [
+            // Header with title and close button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    l10n.rateCoach,
+                    style: AppTheme.headerSmall,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            
+            // Coach name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                widget.coachName,
+                style: AppTheme.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textDark,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Star rating
+            Directionality(
+              textDirection: TextDirection.ltr, // Keep stars LTR even in Arabic
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _rating = index + 1;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Icon(
+                        index < _rating ? Icons.star : Icons.star_border,
+                        color: index < _rating ? Colors.amber : Colors.grey,
+                        size: 32,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Review text field
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: TextField(
+                controller: _reviewController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: l10n.writeReview,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.accent),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+              ),
+            ),
+            
+            const Spacer(),
+            
+            // Save button
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      if (_rating > 0) {
+                        Navigator.of(context).pop(); // Close dialog first
+                        widget.onRatingSubmitted(_rating, _reviewController.text);
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: _rating > 0 ? AppTheme.primary : Colors.grey,
+                      foregroundColor: _rating > 0 ? AppTheme.textLight : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: Text(
+                      l10n.save,
+                      style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: AppTheme.textLight),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1331,6 +1331,12 @@ abstract class AppLocalizations {
   /// **'days'**
   String get nutrition_plans_days;
 
+  /// No description provided for @nutrition_plans_day.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get nutrition_plans_day;
+
   /// No description provided for @checkYourEmail.
   ///
   /// In en, this message translates to:
@@ -1390,6 +1396,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this plan?'**
   String get deletePlanConfirmation;
+
+  /// No description provided for @deletePlanConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this plan?'**
+  String get deletePlanConfirm;
 
   /// No description provided for @delete.
   ///
@@ -1684,6 +1696,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid OTP. Please try again.'**
   String get otpInvalid;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts yet'**
+  String get noPostsYet;
+
+  /// No description provided for @reviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
+  String get reviews;
+
+  /// No description provided for @showAllReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Show All Reviews'**
+  String get showAllReviews;
+
+  /// No description provided for @noReviewsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get noReviewsYet;
+
+  /// No description provided for @createPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get createPost;
+
+  /// No description provided for @seeMore.
+  ///
+  /// In en, this message translates to:
+  /// **'See more'**
+  String get seeMore;
+
+  /// No description provided for @whatsOnYourMind.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s on your mind?'**
+  String get whatsOnYourMind;
+
+  /// No description provided for @post.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get post;
+
+  /// No description provided for @editPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Post'**
+  String get editPost;
+
+  /// No description provided for @deletePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Post'**
+  String get deletePost;
+
+  /// No description provided for @update.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get update;
+
+  /// No description provided for @deletePostConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this post?'**
+  String get deletePostConfirm;
+
+  /// No description provided for @makeFirstPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Your First Post'**
+  String get makeFirstPost;
+
+  /// No description provided for @unassignPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassign Plan'**
+  String get unassignPlan;
+
+  /// No description provided for @unassignPlanConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassign Plan'**
+  String get unassignPlanConfirmTitle;
+
+  /// No description provided for @unassignPlanConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to unassign this plan from the trainee?'**
+  String get unassignPlanConfirmMessage;
+
+  /// No description provided for @unassignPlanSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan unassigned successfully'**
+  String get unassignPlanSuccess;
+
+  /// No description provided for @unassignPlanError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to unassign plan. Please try again.'**
+  String get unassignPlanError;
+
+  /// No description provided for @endSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'End Subscription'**
+  String get endSubscription;
+
+  /// No description provided for @endSubscriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End Subscription'**
+  String get endSubscriptionTitle;
+
+  /// No description provided for @endSubscriptionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to end this trainee\'s subscription?'**
+  String get endSubscriptionMessage;
+
+  /// No description provided for @endSubscriptionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription ended successfully'**
+  String get endSubscriptionSuccess;
+
+  /// No description provided for @endSubscriptionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to end subscription. Please try again.'**
+  String get endSubscriptionError;
+
+  /// No description provided for @unsubscribeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe from Coach'**
+  String get unsubscribeTitle;
+
+  /// No description provided for @unsubscribeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to unsubscribe from this coach?'**
+  String get unsubscribeMessage;
+
+  /// No description provided for @unsubscribeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribed successfully'**
+  String get unsubscribeSuccess;
+
+  /// No description provided for @unsubscribeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to unsubscribe. Please try again.'**
+  String get unsubscribeError;
+
+  /// No description provided for @rateCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Coach'**
+  String get rateCoach;
+
+  /// No description provided for @writeReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your review...'**
+  String get writeReview;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @reviewSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submitted successfully'**
+  String get reviewSuccess;
+
+  /// No description provided for @reviewError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit review. Please try again.'**
+  String get reviewError;
+
+  /// No description provided for @reviewAlreadySubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already submitted a review for this coach'**
+  String get reviewAlreadySubmitted;
+
+  /// No description provided for @suggestedExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Exercises'**
+  String get suggestedExercises;
+
+  /// No description provided for @suggestedFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Food'**
+  String get suggestedFood;
+
+  /// No description provided for @noSuggestedExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggested exercises available'**
+  String get noSuggestedExercises;
+
+  /// No description provided for @noSuggestedFood.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggested food available'**
+  String get noSuggestedFood;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

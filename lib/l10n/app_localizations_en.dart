@@ -655,6 +655,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nutrition_plans_days => 'days';
 
   @override
+  String get nutrition_plans_day => 'Day';
+
+  @override
   String get checkYourEmail => 'Check your email';
 
   @override
@@ -683,6 +686,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deletePlanConfirmation => 'Are you sure you want to delete this plan?';
+
+  @override
+  String get deletePlanConfirm => 'Are you sure you want to delete this plan?';
 
   @override
   String get delete => 'Delete';
@@ -836,4 +842,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get otpInvalid => 'Invalid OTP. Please try again.';
+
+  @override
+  String get noPostsYet => 'No posts yet';
+
+  @override
+  String get reviews => 'Reviews';
+
+  @override
+  String get showAllReviews => 'Show All Reviews';
+
+  @override
+  String get noReviewsYet => 'No reviews yet';
+
+  @override
+  String get createPost => 'Create Post';
+
+  @override
+  String get seeMore => 'See more';
+
+  @override
+  String get whatsOnYourMind => 'What\'s on your mind?';
+
+  @override
+  String get post => 'Post';
+
+  @override
+  String get editPost => 'Edit Post';
+
+  @override
+  String get deletePost => 'Delete Post';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get deletePostConfirm => 'Are you sure you want to delete this post?';
+
+  @override
+  String get makeFirstPost => 'Make Your First Post';
+
+  @override
+  String get unassignPlan => 'Unassign Plan';
+
+  @override
+  String get unassignPlanConfirmTitle => 'Unassign Plan';
+
+  @override
+  String get unassignPlanConfirmMessage => 'Are you sure you want to unassign this plan from the trainee?';
+
+  @override
+  String get unassignPlanSuccess => 'Plan unassigned successfully';
+
+  @override
+  String get unassignPlanError => 'Failed to unassign plan. Please try again.';
+
+  @override
+  String get endSubscription => 'End Subscription';
+
+  @override
+  String get endSubscriptionTitle => 'End Subscription';
+
+  @override
+  String get endSubscriptionMessage => 'Are you sure you want to end this trainee\'s subscription?';
+
+  @override
+  String get endSubscriptionSuccess => 'Subscription ended successfully';
+
+  @override
+  String get endSubscriptionError => 'Failed to end subscription. Please try again.';
+
+  @override
+  String get unsubscribeTitle => 'Unsubscribe from Coach';
+
+  @override
+  String get unsubscribeMessage => 'Are you sure you want to unsubscribe from this coach?';
+
+  @override
+  String get unsubscribeSuccess => 'Unsubscribed successfully';
+
+  @override
+  String get unsubscribeError => 'Failed to unsubscribe. Please try again.';
+
+  @override
+  String get rateCoach => 'Rate Coach';
+
+  @override
+  String get writeReview => 'Write your review...';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get reviewSuccess => 'Review submitted successfully';
+
+  @override
+  String get reviewError => 'Failed to submit review. Please try again.';
+
+  @override
+  String get reviewAlreadySubmitted => 'You have already submitted a review for this coach';
+
+  @override
+  String get suggestedExercises => 'Suggested Exercises';
+
+  @override
+  String get suggestedFood => 'Suggested Food';
+
+  @override
+  String get noSuggestedExercises => 'No suggested exercises available';
+
+  @override
+  String get noSuggestedFood => 'No suggested food available';
 }
