@@ -78,20 +78,9 @@ class ChatPreviewBubble extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 24,
                       backgroundColor: AppColors.accent.withOpacity(0.2),
-                      child: imageUrl != null
-                          ? ClipOval(
-                              child: Image.asset(
-                                imageUrl!,
-                                width: 64,
-                                height: 64,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 30,
-                              color: Colors.grey,
-                            ),
+                      backgroundImage: imageUrl != null
+                          ? NetworkImage(imageUrl!)
+                          : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
                     ),
                   ),
                   const SizedBox(width: 12),

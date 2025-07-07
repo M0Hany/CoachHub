@@ -89,6 +89,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (response) {
+        // Initialize chat functionality after successful login
+        try {
+          await authProvider.initializeChat(context);
+        } catch (e) {
+          debugPrint('Chat initialization error: $e');
+          // Don't block login if chat fails to initialize
+        }
+        
         final userType = authProvider.currentUser?.type;
         if (userType == UserType.coach) {
           context.go('/coach/home');

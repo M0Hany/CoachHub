@@ -258,7 +258,17 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  context.push(
+                    '/chat/room/${widget.traineeId}',
+                    extra: {
+                      'recipientId': widget.traineeId.toString(),
+                      'recipientName': profile?['full_name'] ?? 'Trainee',
+                      'currentUserId': 2, // TODO: Get from auth provider
+                      'chatId': null, // TODO: Get chat ID if available
+                    },
+                  );
+                },
                 child: Image.asset(
                   'assets/icons/navigation/Chat Accent.png',
                   width: 28,

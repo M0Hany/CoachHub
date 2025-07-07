@@ -374,7 +374,7 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
                   ),
                   IconButton(
                     onPressed: () {
-                      context.push('/trainee/notifications');
+                      context.push('/notifications');
                     },
                     icon: Image.asset(
                       'assets/icons/navigation/Notifications.png',

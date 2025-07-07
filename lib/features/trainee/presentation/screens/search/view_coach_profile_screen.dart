@@ -225,7 +225,15 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
               height: 28,
             ),
             onPressed: () {
-              // TODO: Implement chat functionality
+              context.push(
+                '/chat/room/${widget.coachId}',
+                extra: {
+                  'recipientId': widget.coachId,
+                  'recipientName': _coach?.fullName ?? 'Coach',
+                  'currentUserId': 4, // TODO: Get from auth provider
+                  'chatId': null, // TODO: Get chat ID if available
+                },
+              );
             },
           ),
           const SizedBox(width: 8),

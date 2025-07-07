@@ -238,7 +238,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    context.push('/coach/notifications');
+                                    context.push('/notifications');
                                   },
                                   icon: Image.asset(
                                     'assets/icons/navigation/Notifications.png',

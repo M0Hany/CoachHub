@@ -293,6 +293,8 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: ListTile(
+                title: Text(plan.title),
+                subtitle: Text('${plan.duration} days'),
                 onTap: () async {
                   final planId = plan.id;
                   if (planId == null) {
@@ -313,38 +315,6 @@ class _CoachPlansScreenState extends State<CoachPlansScreen> with SingleTickerPr
                     },
                   );
                 },
-                title: Text(
-                  plan.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  l10n.daysCount(plan.duration),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0FF789).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    l10n.nutritionLabel,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[800],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
               ),
             );
           },

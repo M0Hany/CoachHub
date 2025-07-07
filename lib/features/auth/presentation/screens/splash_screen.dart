@@ -102,14 +102,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: AppTheme.primary,
           body: Stack(
             fit: StackFit.expand,
             children: [
               Lottie.asset(
                 'assets/images/logo/splash_logo_animation.json',
                 controller: _controller,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
               if (authProvider.isLoading)
                 const Positioned(

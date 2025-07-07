@@ -10,6 +10,8 @@ import 'package:coachhub/features/auth/models/user_model.dart';
 import 'dart:convert';
 import 'dart:convert' show base64Url;
 import 'dart:convert' show utf8;
+import 'package:coachhub/core/services/fcm_service.dart';
+import 'package:coachhub/core/services/chat_initialization_service.dart';
 
 enum AuthStatus {
   initial,
@@ -25,6 +27,8 @@ enum AuthStatus {
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
+  final FCMService _fcmService = FCMService();
+  final ChatInitializationService _chatInitService = ChatInitializationService();
 
   AuthStatus _status = AuthStatus.initial;
   UserModel? _currentUser;
@@ -109,6 +113,10 @@ class AuthProvider extends ChangeNotifier {
         if (profile.success && profile.data?.user != null) {
           _userType = profile.data!.user!.type == UserType.coach ? UserType.coach : UserType.trainee;
           _status = AuthStatus.authenticated;
+          
+          // Send FCM token to backend for already authenticated users
+          developer.log('User is already authenticated, sending FCM token to backend', name: 'AuthProvider');
+          await _fcmService.sendTokenToBackend();
         } else {
           // If we can't determine user type, treat as unauthenticated
           _status = AuthStatus.unauthenticated;
@@ -381,13 +389,22 @@ class AuthProvider extends ChangeNotifier {
             final profileResponse = await _authService.fetchProfile();
             if (profileResponse.success && profileResponse.data?.user != null) {
               // Update state in a single call to avoid race conditions
-                              _currentUser = profileResponse.data!.user;
-                updateAuthState(
-                  status: AuthStatus.authenticated,
-                  userType: profileResponse.data!.user!.type,
-                  isLoading: false,
-                  error: null
+              _currentUser = profileResponse.data!.user;
+              updateAuthState(
+                status: AuthStatus.authenticated,
+                userType: profileResponse.data!.user!.type,
+                isLoading: false,
+                error: null
               );
+              
+              // Send FCM token to backend after successful login
+              developer.log('Login successful, sending FCM token to backend', name: 'AuthProvider');
+              await _fcmService.sendTokenToBackend();
+              
+              // Initialize chat functionality after successful login
+              developer.log('Initializing chat after successful login', name: 'AuthProvider');
+              // Note: We'll need to pass context to initialize chat, so we'll do this in the UI layer
+              
               return true;
             }
           }
@@ -477,6 +494,18 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Initialize chat functionality (to be called from UI layer)
+  Future<void> initializeChat(BuildContext context) async {
+    if (isAuthenticated) {
+      await _chatInitService.initializeChat(context);
+    }
+  }
+
+  // Disconnect chat functionality (to be called from UI layer)
+  void disconnectChat(BuildContext context) {
+    _chatInitService.disconnectChat(context);
   }
 
   // Force a state refresh and auth check

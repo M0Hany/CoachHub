@@ -89,7 +89,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
         context.go(widget.role == UserRole.trainee ? '/trainee/search' : '/coach/plans');
         break;
       case 1:
-        context.go(widget.role == UserRole.trainee ? '/trainee/chats' : '/coach/chats');
+        context.go('/chat');
         break;
       case 2:
         context.go(widget.role == UserRole.trainee ? '/trainee/home' : '/coach/home');

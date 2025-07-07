@@ -20,10 +20,15 @@ import 'core/providers/language_provider.dart';
 import 'l10n/app_localizations.dart';
 import 'core/network/http_client.dart';
 import 'core/services/token_service.dart';
+import 'core/services/fcm_service.dart';
 import 'features/auth/services/auth_service.dart';
+import 'core/providers/chat_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize FCM
+  await FCMService().initialize();
 
   // Initialize services
   final tokenService = TokenService();
@@ -33,6 +38,21 @@ void main() async {
   final authService = AuthService(httpClient, tokenService);
   final authProvider = AuthProvider(authService);
   final coachService = CoachService(httpClient: httpClient);
+  final chatProvider = ChatProvider();
+
+  // Send FCM token to backend if user is already authenticated
+  final isAuthenticated = await tokenService.isAuthenticated();
+  if (isAuthenticated) {
+    print('User is already authenticated, sending FCM token to backend from main');
+    await FCMService().sendTokenToBackend();
+    
+    // Initialize chat if user is authenticated
+    try {
+      await chatProvider.initialize();
+    } catch (e) {
+      print('Failed to initialize chat: $e');
+    }
+  }
 
   runApp(
     MultiProvider(
@@ -50,6 +70,9 @@ void main() async {
           create: (_) => CoachSearchProvider(coachService: coachService),
         ),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider<ChatProvider>(
+          create: (_) => chatProvider,
+        ),
       ],
       child: const MyApp(),
     ),
@@ -78,6 +101,47 @@ class MyApp extends StatelessWidget {
           locale: languageProvider.currentLocale,
         );
       },
+    );
+  }
+
+  void _showSocketTestDialog(BuildContext context) {
+    final chatProvider = context.read<ChatProvider>();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Socket.IO Test'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Connected: ${chatProvider.isConnected}'),
+            Text('Connecting: ${chatProvider.isConnecting}'),
+            Text('Current User ID: ${chatProvider.currentUserId}'),
+            Text('Current Recipient ID: ${chatProvider.currentRecipientId}'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () => chatProvider.initialize(),
+                  child: const Text('Connect'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => chatProvider.disconnect(),
+                  child: const Text('Disconnect'),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }

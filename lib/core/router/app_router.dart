@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../core/constants/enums.dart' hide AuthStatus;
 
 // Auth screens
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/auth/presentation/screens/complete_profile_screen.dart' hide UserType;
+import '../../features/auth/presentation/screens/complete_profile_screen.dart';
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/models/user_model.dart';  // Import for UserType
@@ -15,9 +17,9 @@ import '../../features/auth/presentation/screens/reset/otp_reset_screen.dart';
 import '../../features/auth/presentation/screens/reset/new_password_screen.dart';
 
 // Coach screens
-import '../../features/coach/presentation/screens/chat/coach_chat_room_screen.dart' as coach;
-import '../../features/coach/presentation/screens/chat/coach_chats_screen.dart' as coach;
-import '../../features/coach/presentation/screens/notifications/coach_notifications_screen.dart';
+import '../../features/chat/chat_room_screen.dart';
+import '../../features/chat/chats_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
 import '../../features/coach/presentation/screens/home/coach_home_screen.dart';
 import '../../features/coach/presentation/screens/profile/coach_profile_screen.dart';
 import '../../features/coach/presentation/screens/posts/coach_posts_screen.dart';
@@ -38,9 +40,6 @@ import '../../features/coach/presentation/screens/view_trainee_profile_screen.da
 import '../../features/coach/presentation/screens/reviews/coach_reviews_screen.dart';
 
 // Trainee screens
-import '../../features/trainee/presentation/screens/chat/trainee_chats_screen.dart' as trainee;
-import '../../features/trainee/presentation/screens/chat/trainee_chat_room_screen.dart' as trainee;
-import '../../features/trainee/presentation/screens/notifications/trainee_notifications_screen.dart';
 import '../../features/trainee/presentation/screens/search/trainee_search_screen.dart';
 import '../../features/trainee/presentation/screens/home/trainee_home_screen.dart';
 import '../../features/trainee/presentation/screens/profile/trainee_profile_screen.dart';
@@ -55,7 +54,6 @@ import '../../features/trainee/presentation/screens/search/trainee_coach_posts_s
 import '../../features/trainee/presentation/screens/search/trainee_coach_post_focus_screen.dart';
 import '../../features/trainee/presentation/screens/search/trainee_coach_reviews_screen.dart';
 
-import 'package:provider/provider.dart';
 import 'dart:developer' as developer;
 import '../../features/auth/presentation/screens/onboarding/onboarding_screen.dart';
 
@@ -78,7 +76,7 @@ final GoRouter appRouter = GoRouter(
     final userType = authProvider.userType; // Use the getter instead of direct access
 
     developer.log(
-      'Redirecting: Status=$authStatus, Location=$currentLocation, UserType=$userType',
+      'Redirecting: Status=$authStatus, Location=$currentLocation, UserType=$userType, IsLoading=${authProvider.isLoading}',
       name: 'Router',
     );
 
@@ -89,8 +87,7 @@ final GoRouter appRouter = GoRouter(
 
     // If we're still in initial state or authenticating, redirect to splash
     if (authStatus == AuthStatus.initial || 
-        authStatus == AuthStatus.authenticating || 
-        authProvider.isLoading) {
+        authStatus == AuthStatus.authenticating) {
       developer.log('Redirecting to splash: still in $authStatus state', name: 'Router');
       return '/splash';
     }
@@ -140,7 +137,10 @@ final GoRouter appRouter = GoRouter(
         }
 
         // Ensure coach users stay in coach routes and trainee users stay in trainee routes
-        if (userType == UserType.coach && currentLocation.startsWith('/trainee')) {
+        // Allow both user types to access the unified /chat route
+        if (currentLocation == '/chat' || currentLocation.startsWith('/chat/room') || currentLocation == '/notifications') {
+          return null; // Allow access to unified chat routes
+        } else if (userType == UserType.coach && currentLocation.startsWith('/trainee')) {
           return '/coach/home';
         } else if (userType == UserType.trainee && currentLocation.startsWith('/coach')) {
           return '/trainee/home';
@@ -162,7 +162,12 @@ final GoRouter appRouter = GoRouter(
 
       case AuthStatus.profileIncomplete:
         // Allow access to expertise and health data screens during profile completion
-        if (currentLocation == '/coach/expertise' || currentLocation == '/trainee-health-data') {
+        // Also allow access to unified chat route
+        if (currentLocation == '/coach/expertise' || 
+            currentLocation == '/trainee-health-data' ||
+            currentLocation == '/chat' ||
+            currentLocation.startsWith('/chat/room') ||
+            currentLocation == '/notifications') {
           return null;
         }
         if (userType == UserType.trainee) {
@@ -174,12 +179,17 @@ final GoRouter appRouter = GoRouter(
 
       case AuthStatus.unauthenticated:
       case AuthStatus.error:
-      case AuthStatus.initial:
-      default:
+        // For unauthenticated users, only allow access to public routes
         if (!isPublicRoute && !isAuthFlowRoute) {
+          developer.log('Unauthenticated user trying to access protected route, redirecting to login', name: 'Router');
           return '/login';
         }
+        // If they're already on a public route, let them stay
         return null;
+        
+      default:
+        // For any other status (like initial), redirect to splash
+        return '/splash';
     }
   },
   routes: [
@@ -241,25 +251,6 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'profile',
           builder: (context, state) => const TraineeProfileScreen(),
-        ),
-        GoRoute(
-          path: 'chats',
-          builder: (context, state) => const trainee.TraineeChatsScreen(),
-        ),
-        GoRoute(
-          path: 'chat/:id',
-          builder: (context, state) {
-            final chatId = state.pathParameters['id']!;
-            return trainee.ChatScreen(
-              name: chatId,
-              imageUrl: 'assets/images/default_profile.jpg',
-              lastSeen: 'Online',
-            );
-          },
-        ),
-        GoRoute(
-          path: 'notifications',
-          builder: (context, state) => const TraineeNotificationsScreen(),
         ),
         GoRoute(
           path: 'settings',
@@ -371,6 +362,34 @@ final GoRouter appRouter = GoRouter(
             );
           },
         ),
+        GoRoute(
+          path: 'chats',
+          builder: (context, state) => const ChatsScreen(userRole: UserRole.trainee),
+        ),
+        GoRoute(
+          path: 'chat',
+          builder: (context, state) => Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              final userType = authProvider.userType;
+              final userRole = userType == UserType.coach ? UserRole.coach : UserRole.trainee;
+              return ChatsScreen(userRole: userRole);
+            },
+          ),
+        ),
+        GoRoute(
+          path: 'chat/room/:id',
+          builder: (context, state) {
+            final recipientId = state.pathParameters['id'] ?? '';
+            final extra = state.extra as Map<String, dynamic>?;
+            return ChatRoomScreen(
+              recipientId: recipientId,
+              recipientName: extra?['recipientName'] ?? 'User',
+              currentUserId: extra?['currentUserId'] ?? 0,
+              chatId: extra?['chatId'],
+            );
+          },
+        ),
+
       ],
     ),
 
@@ -468,21 +487,30 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: 'chats',
-          builder: (context, state) => const coach.CoachChatsScreen(),
+          builder: (context, state) => const ChatsScreen(userRole: UserRole.coach),
         ),
         GoRoute(
-          path: 'chat/:id',
+          path: 'chat',
+          builder: (context, state) => Consumer<AuthProvider>(
+            builder: (context, authProvider, _) {
+              final userType = authProvider.userType;
+              final userRole = userType == UserType.coach ? UserRole.coach : UserRole.trainee;
+              return ChatsScreen(userRole: userRole);
+            },
+          ),
+        ),
+        GoRoute(
+          path: 'chat/room/:id',
           builder: (context, state) {
-            final chatId = state.pathParameters['id']!;
-            // Using mock data for chat details
-            return coach.CoachChatRoomScreen(
-              traineeId: chatId,
+            final recipientId = state.pathParameters['id'] ?? '';
+            final extra = state.extra as Map<String, dynamic>?;
+            return ChatRoomScreen(
+              recipientId: recipientId,
+              recipientName: extra?['recipientName'] ?? 'User',
+              currentUserId: extra?['currentUserId'] ?? 0,
+              chatId: extra?['chatId'],
             );
           },
-        ),
-        GoRoute(
-          path: 'notifications',
-          builder: (context, state) => const CoachNotificationsScreen(),
         ),
         GoRoute(
           path: 'settings',
@@ -566,6 +594,39 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/chat',
+      builder: (context, state) => Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final userType = authProvider.userType;
+          final userRole = userType == UserType.coach ? UserRole.coach : UserRole.trainee;
+          return ChatsScreen(userRole: userRole);
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/chat/room/:id',
+      builder: (context, state) {
+        final recipientId = state.pathParameters['id'] ?? '';
+        final extra = state.extra as Map<String, dynamic>?;
+        return ChatRoomScreen(
+          recipientId: recipientId,
+          recipientName: extra?['recipientName'] ?? 'User',
+          currentUserId: extra?['currentUserId'] ?? 0,
+          chatId: extra?['chatId'],
+        );
+      },
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          final userType = authProvider.userType;
+          final userRole = userType == UserType.coach ? UserRole.coach : UserRole.trainee;
+          return NotificationsScreen(userRole: userRole);
+        },
+      ),
     ),
     GoRoute(
       path: '/coach/view-trainee/:id',

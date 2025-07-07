@@ -4,6 +4,7 @@ import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
 import '../../../core/network/http_client.dart';
 import '../../../core/services/token_service.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../../core/config/api_config.dart';
 import 'dart:developer' as developer;
 import 'package:path/path.dart' as path;
@@ -11,6 +12,7 @@ import 'package:path/path.dart' as path;
 class AuthService {
   final HttpClient _httpClient;
   final TokenService _tokenService;
+  final FCMService _fcmService = FCMService();
 
   AuthService(this._httpClient, this._tokenService);
 
@@ -45,6 +47,9 @@ class AuthService {
         token: authResponse.data!.token!,
         refreshToken: authResponse.data!.refreshToken!,
       );
+      
+      // Send FCM token to backend after successful registration
+      await _fcmService.sendTokenToBackend();
     }
 
     return authResponse;
@@ -72,6 +77,9 @@ class AuthService {
         token: authResponse.data!.token!,
         refreshToken: null, // No refresh token at this stage
       );
+      
+      // Send FCM token to backend after successful OTP verification
+      await _fcmService.sendTokenToBackend();
     } else {
       developer.log('No token received from OTP verification', name: 'AuthService');
     }
@@ -136,6 +144,9 @@ class AuthService {
         token: authResponse.data!.token!,
         refreshToken: null, // No refresh token at this stage
       );
+      
+      // Send FCM token to backend after successful profile completion
+      await _fcmService.sendTokenToBackend();
     } else {
       developer.log('No token received from profile completion', name: 'AuthService');
     }
@@ -158,13 +169,25 @@ class AuthService {
 
     final authResponse = AuthResponseModel.fromJson(response.data!);
     
+    developer.log('Sign-in response: success=${authResponse.success}, hasToken=${authResponse.data?.token != null}, hasRefreshToken=${authResponse.data?.refreshToken != null}', name: 'AuthService');
+    developer.log('Sign-in raw response: ${response.data}', name: 'AuthService');
+    developer.log('Sign-in parsed data: ${authResponse.data?.toJson()}', name: 'AuthService');
+    
     if (authResponse.success && 
         authResponse.data?.token != null && 
         authResponse.data?.refreshToken != null) {
+      developer.log('Saving tokens and sending FCM token to backend', name: 'AuthService');
       await _tokenService.saveTokens(
         token: authResponse.data!.token!,
         refreshToken: authResponse.data!.refreshToken!,
       );
+      
+      // Send FCM token to backend after successful sign in
+      developer.log('Calling FCM service to send token to backend', name: 'AuthService');
+      await _fcmService.sendTokenToBackend();
+      developer.log('FCM token sending completed', name: 'AuthService');
+    } else {
+      developer.log('Sign-in not successful or missing tokens, skipping FCM token send', name: 'AuthService');
     }
 
     return authResponse;
