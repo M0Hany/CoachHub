@@ -81,7 +81,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
               ),
               const Align(
                 alignment: Alignment.bottomCenter,
-                child: BottomNavBar(role: UserRole.trainee, currentIndex: 2), // Home tab
+                child: BottomNavBar(role: UserRole.trainee), // Home tab
               ),
             ],
           ),

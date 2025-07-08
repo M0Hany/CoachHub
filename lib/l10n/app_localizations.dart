@@ -455,6 +455,36 @@ abstract class AppLocalizations {
   /// **'Username can only contain letters and numbers'**
   String get validation_username_format;
 
+  /// No description provided for @passwordRequirementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Requirements:'**
+  String get passwordRequirementsTitle;
+
+  /// No description provided for @passwordRequirementMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'• At least 8 characters long'**
+  String get passwordRequirementMinLength;
+
+  /// No description provided for @passwordRequirementCapital.
+  ///
+  /// In en, this message translates to:
+  /// **'• One capital letter (A-Z)'**
+  String get passwordRequirementCapital;
+
+  /// No description provided for @passwordRequirementNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'• One number (0-9)'**
+  String get passwordRequirementNumber;
+
+  /// No description provided for @passwordRequirementMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters long, contain one capital letter, and one number'**
+  String get passwordRequirementMessage;
+
   /// No description provided for @registerSuccess.
   ///
   /// In en, this message translates to:
@@ -527,6 +557,12 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTitle;
 
+  /// No description provided for @noNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotificationsYet;
+
   /// No description provided for @notificationsToday.
   ///
   /// In en, this message translates to:
@@ -586,6 +622,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select your areas of expertise'**
   String get selectExpertiseAreas;
+
+  /// No description provided for @selectThreeExpertise.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select exactly 3 areas of expertise'**
+  String get selectThreeExpertise;
 
   /// No description provided for @weightTraining.
   ///
@@ -670,6 +712,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your bio'**
   String get enterBio;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
 
   /// No description provided for @gender.
   ///
@@ -839,6 +887,18 @@ abstract class AppLocalizations {
   /// **'Fitness Goals'**
   String get fitnessGoals;
 
+  /// No description provided for @selectGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your fitness goals'**
+  String get selectGoals;
+
+  /// No description provided for @selectThreeGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select exactly 3 goals'**
+  String get selectThreeGoals;
+
   /// No description provided for @saveHealthData.
   ///
   /// In en, this message translates to:
@@ -856,6 +916,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages'**
   String get messages;
+
+  /// No description provided for @noChatsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get noChatsYet;
+
+  /// No description provided for @noMessagesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet. Start the conversation!'**
+  String get noMessagesYet;
+
+  /// No description provided for @messageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'message..'**
+  String get messageHint;
 
   /// No description provided for @searchForClientsFields.
   ///
@@ -1066,6 +1144,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply'**
   String get apply;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Set'**
+  String get notSet;
 
   /// No description provided for @selectDayFirst.
   ///
@@ -1379,6 +1463,18 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
+  /// No description provided for @loginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please check your credentials.'**
+  String get loginFailed;
+
+  /// No description provided for @typing.
+  ///
+  /// In en, this message translates to:
+  /// **'Typing'**
+  String get typing;
+
   /// No description provided for @noTraineesSubscribed.
   ///
   /// In en, this message translates to:
@@ -1445,6 +1541,36 @@ abstract class AppLocalizations {
   /// **'Search for Coaches, fields..'**
   String get searchForCoachesFields;
 
+  /// No description provided for @searchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchTitle;
+
+  /// No description provided for @allFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allFilter;
+
+  /// No description provided for @recommendationsFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations'**
+  String get recommendationsFilter;
+
+  /// No description provided for @showProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Profile'**
+  String get showProfile;
+
+  /// No description provided for @viewCoach.
+  ///
+  /// In en, this message translates to:
+  /// **'View Coach'**
+  String get viewCoach;
+
   /// No description provided for @noRecommendedCoaches.
   ///
   /// In en, this message translates to:
@@ -1480,6 +1606,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subscription request sent successfully'**
   String get subscribeSuccess;
+
+  /// No description provided for @subscriptionRequestAcceptedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription request accepted successfully'**
+  String get subscriptionRequestAcceptedSuccess;
 
   /// No description provided for @close.
   ///
@@ -1804,6 +1936,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to unassign plan. Please try again.'**
   String get unassignPlanError;
+
+  /// No description provided for @traineeSubscriptionNotActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainee subscription might not be active.'**
+  String get traineeSubscriptionNotActive;
 
   /// No description provided for @endSubscription.
   ///

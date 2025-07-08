@@ -13,13 +13,11 @@ class SocketService extends ChangeNotifier {
   
   bool _isConnected = false;
   bool _isConnecting = false;
-  int? _currentUserId; // Track current user ID like JavaScript
   
   // Getters
   bool get isConnected => _isConnected;
   bool get isConnecting => _isConnecting;
   IO.Socket? get socket => _socket;
-  int? get currentUserId => _currentUserId;
   
   // Callbacks for chat events
   Function(PrivateMessageEvent)? onPrivateMessageReceived;
@@ -41,19 +39,16 @@ class SocketService extends ChangeNotifier {
       if (token == null) {
         throw Exception('No authentication token found');
       }
-      
-      // Extract user ID from JWT token (matching JavaScript structure)
-      _currentUserId = _extractUserIdFromToken(token);
-      
-      developer.log('Connecting to Socket.IO server as User $_currentUserId...', name: 'SocketService');
-      
-      // Create socket connection with JWT authentication (matching JavaScript)
+
+      developer.log('🔑 Using JWT token: ${token.substring(0, 20)}...', name: 'SocketService');
+
+      // Create socket connection with JWT authentication (matching JavaScript exactly)
       _socket = IO.io(
         _socketUrl,
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .disableAutoConnect()
-            .setAuth({'token': token}) // Remove 'Bearer ' prefix to match JavaScript
+            .setAuth({'token': token}) // Match JavaScript: auth: { token }
             .build(),
       );
       
@@ -69,25 +64,7 @@ class SocketService extends ChangeNotifier {
     }
   }
 
-  /// Extract user ID from JWT token (simple implementation)
-  int? _extractUserIdFromToken(String token) {
-    try {
-      // Simple JWT parsing - in production, use a proper JWT library
-      final parts = token.split('.');
-      if (parts.length == 3) {
-        final payload = parts[1];
-        // Add padding if needed
-        final paddedPayload = payload + '=' * (4 - payload.length % 4);
-        final decoded = base64Url.decode(paddedPayload);
-        final payloadString = String.fromCharCodes(decoded);
-        final payloadMap = json.decode(payloadString);
-        return payloadMap['id'] as int?;
-      }
-    } catch (e) {
-      developer.log('Error parsing JWT token: $e', name: 'SocketService');
-    }
-    return null;
-  }
+  // Removed JWT token extraction as it's not needed
 
   /// Setup all socket event listeners
   void _setupSocketListeners() {
@@ -96,6 +73,7 @@ class SocketService extends ChangeNotifier {
     // Connection events
     _socket!.onConnect((_) {
       developer.log('✅ Socket.IO connected successfully', name: 'SocketService');
+      developer.log('✅ Socket ID: ${_socket!.id}', name: 'SocketService');
       _isConnected = true;
       _isConnecting = false;
       notifyListeners();
@@ -118,22 +96,39 @@ class SocketService extends ChangeNotifier {
       onDisconnected?.call();
     });
     
-    // Chat events
+    // Chat events - match JavaScript exactly
     _socket!.on('private_message', (data) {
-      developer.log('📩 Received private message: $data', name: 'SocketService');
-      try {
-        final messageEvent = PrivateMessageEvent.fromJson(data);
-        onPrivateMessageReceived?.call(messageEvent);
-      } catch (e) {
-        developer.log('Error parsing private message: $e', name: 'SocketService', error: e);
-      }
+      developer.log('📩 Received private_message event: $data', name: 'SocketService');
+      _handleIncomingMessage(data, 'private_message');
+    });
+    
+    // Listen for any event to debug what's being received
+    _socket!.onAny((event, data) {
+      developer.log('🔍 Received any event: $event with data: $data', name: 'SocketService');
+    });
+    
+    // Listen for pong response
+    _socket!.on('pong', (data) {
+      developer.log('🏓 Received pong: $data', name: 'SocketService');
     });
     
     _socket!.on('typing', (data) {
       developer.log('⌨️ Received typing event: $data', name: 'SocketService');
       try {
-        final typingEvent = TypingEvent.fromJson(data);
-        onTypingEventReceived?.call(typingEvent);
+        // Match JavaScript: socket.on("typing", ({ from, isTyping }) => { ... });
+        if (data is Map<String, dynamic>) {
+          final from = data['from']?.toString();
+          final isTyping = data['isTyping'] as bool?;
+          
+          if (from != null && isTyping != null) {
+            final typingEvent = TypingEvent(
+              from: from,
+              isTyping: isTyping,
+              to: null,
+            );
+            onTypingEventReceived?.call(typingEvent);
+          }
+        }
       } catch (e) {
         developer.log('Error parsing typing event: $e', name: 'SocketService', error: e);
       }
@@ -145,20 +140,88 @@ class SocketService extends ChangeNotifier {
     });
   }
 
+  /// Handle incoming messages from different event types
+  void _handleIncomingMessage(dynamic data, String eventName) {
+    developer.log('📩 Processing $eventName event with data: $data', name: 'SocketService');
+    
+    try {
+      // Match JavaScript: socket.on("private_message", ({ from, content }) => { ... });
+      if (data is Map<String, dynamic>) {
+        final from = data['from']?.toString();
+        final content = data['content']?.toString();
+        
+        if (from != null && content != null) {
+          final messageEvent = PrivateMessageEvent(
+            from: from,
+            content: content,
+            to: null, // Not needed for incoming messages
+          );
+          
+          developer.log('📩 Successfully parsed message from $from: $content', name: 'SocketService');
+          onPrivateMessageReceived?.call(messageEvent);
+          return;
+        }
+      }
+      
+      // If it's not a Map, try to convert it
+      if (data is String) {
+        try {
+          final jsonData = jsonDecode(data);
+          final from = jsonData['from']?.toString();
+          final content = jsonData['content']?.toString();
+          
+          if (from != null && content != null) {
+            final messageEvent = PrivateMessageEvent(
+              from: from,
+              content: content,
+              to: null,
+            );
+            
+            developer.log('📩 Successfully parsed string message from $from: $content', name: 'SocketService');
+            onPrivateMessageReceived?.call(messageEvent);
+            return;
+          }
+        } catch (e) {
+          developer.log('📩 Failed to parse string data as JSON: $e', name: 'SocketService');
+        }
+      }
+      
+      // If all else fails, log the raw data
+      developer.log('📩 Could not parse message data: $data (type: ${data.runtimeType})', name: 'SocketService');
+      
+    } catch (e) {
+      developer.log('📩 Error parsing message from $eventName: $e', name: 'SocketService', error: e);
+    }
+  }
+
   /// Send a private message (matching JavaScript structure)
   void sendPrivateMessage(String to, String content) {
+    developer.log('📤 Attempting to send private message to $to: $content', name: 'SocketService');
+    developer.log('📤 Socket connected: $_isConnected, Socket null: ${_socket == null}', name: 'SocketService');
+    
     if (!_isConnected || _socket == null) {
-      developer.log('Cannot send message: Socket not connected', name: 'SocketService');
+      developer.log('❌ Cannot send message: Socket not connected', name: 'SocketService');
+      // Try to reconnect and send
+      connect().then((_) {
+        if (_isConnected && _socket != null) {
+          _sendMessageAfterConnection(to, content);
+        }
+      });
       return;
     }
     
-    final messageEvent = PrivateMessageEvent(
-      to: to,
-      content: content,
-    );
+    _sendMessageAfterConnection(to, content);
+  }
+
+  void _sendMessageAfterConnection(String to, String content) {
+    // Match JavaScript exactly: socket.emit("private_message", { to: recipientId, content: message });
+    final messageData = {
+      'to': to,
+      'content': content,
+    };
     
-    developer.log('📤 Sending private message: ${messageEvent.toJson()}', name: 'SocketService');
-    _socket!.emit('private_message', messageEvent.toJson());
+    developer.log('📤 Sending private message: $messageData', name: 'SocketService');
+    _socket!.emit('private_message', messageData);
   }
 
   /// Send typing status
@@ -168,13 +231,40 @@ class SocketService extends ChangeNotifier {
       return;
     }
     
-    final typingEvent = TypingEvent(
-      to: to,
-      isTyping: isTyping,
-    );
+    // Match JavaScript: socket.emit("typing", { to: recipientId, isTyping: true/false });
+    final typingData = {
+      'to': to,
+      'isTyping': isTyping,
+    };
     
-    developer.log('⌨️ Sending typing status: ${typingEvent.toJson()}', name: 'SocketService');
-    _socket!.emit('typing', typingEvent.toJson());
+    developer.log('⌨️ Sending typing status: $typingData', name: 'SocketService');
+    _socket!.emit('typing', typingData);
+  }
+
+  /// Test socket connection by sending a ping
+  void sendPing() {
+    if (!_isConnected || _socket == null) {
+      developer.log('Cannot send ping: Socket not connected', name: 'SocketService');
+      return;
+    }
+    
+    developer.log('🏓 Sending ping to test connection', name: 'SocketService');
+    _socket!.emit('ping', {'timestamp': DateTime.now().millisecondsSinceEpoch});
+  }
+
+  /// Test private message by sending to self
+  void testPrivateMessage() {
+    if (!_isConnected || _socket == null) {
+      developer.log('Cannot test message: Socket not connected', name: 'SocketService');
+      return;
+    }
+    
+    developer.log('🧪 Testing private message to self', name: 'SocketService');
+    final testData = {
+      'to': '30', // Test with your own ID
+      'content': 'Test message from Flutter',
+    };
+    _socket!.emit('private_message', testData);
   }
 
   /// Disconnect from Socket.IO server

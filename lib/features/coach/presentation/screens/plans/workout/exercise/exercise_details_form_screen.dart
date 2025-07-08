@@ -293,7 +293,7 @@ class _ExerciseDetailsFormScreenState extends State<ExerciseDetailsFormScreen> {
           ),
           const Align(
             alignment: Alignment.bottomCenter,
-            child: BottomNavBar(role: UserRole.coach, currentIndex: 0),
+            child: BottomNavBar(role: UserRole.coach),
           ),
         ],
       ),

@@ -54,13 +54,9 @@ class WorkoutPlanProvider extends ChangeNotifier {
 
   void setWorkoutId(int id) {
     print('WorkoutPlanProvider: setWorkoutId called with ID: $id');
-    if (_workoutId == id && _workoutPlan != null && _workoutPlan!.id == id) {
-      print('WorkoutPlanProvider: Plan already loaded for ID: $id, skipping update');
-      return; // Avoid unnecessary updates
-    }
     print('WorkoutPlanProvider: Updating workout ID to: $id');
     _workoutId = id;
-    // Clear the current plan to force a reload
+    // Always clear the current plan to force a fresh reload
     _workoutPlan = null;
   }
 
@@ -97,11 +93,8 @@ class WorkoutPlanProvider extends ChangeNotifier {
   Future<void> fetchWorkoutPlanDetails(int planId) async {
     print('WorkoutPlanProvider: fetchWorkoutPlanDetails started for plan $planId');
     
-    // If we already have this plan loaded and it's the correct plan, don't fetch again
-    if (_workoutId == planId && _workoutPlan != null && _workoutPlan!.id == planId) {
-      print('WorkoutPlanProvider: Plan already loaded and matches requested ID, skipping fetch');
-      return;
-    }
+    // Always fetch fresh data to ensure correct ordering
+    print('WorkoutPlanProvider: Fetching fresh data for plan $planId');
 
     print('WorkoutPlanProvider: Setting loading state and clearing error');
     _error = null;
@@ -147,6 +140,7 @@ class WorkoutPlanProvider extends ChangeNotifier {
             
             exercisesByMuscle.putIfAbsent(targetMuscle, () => []);
             exercisesByMuscle[targetMuscle]!.add(Exercise(
+              id: exerciseData['exercise_id'], // This is the exercise template ID for remove_exercise_ids
               name: exercise['title'],
               animationPath: exercise['animation'],
               sets: exerciseData['sets'],
@@ -165,6 +159,9 @@ class WorkoutPlanProvider extends ChangeNotifier {
             )).toList(),
           );
         }).toList();
+
+        // Sort days by dayNumber to ensure correct order
+        processedDays.sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
 
         print('WorkoutPlanProvider: Creating WorkoutPlan object');
         _workoutPlan = WorkoutPlan(
@@ -295,7 +292,7 @@ class WorkoutPlanProvider extends ChangeNotifier {
               'day_number': _selectedDayIndex! + 1,
               'add_exercises': [
                 {
-                  'exercise_id': 1, // TODO: Get actual exercise ID from API
+                  'exercise_id': exercise.id,
                   'sets': exercise.sets,
                   'reps': exercise.reps,
                   'rest_time': exercise.restTime,
@@ -356,6 +353,52 @@ class WorkoutPlanProvider extends ChangeNotifier {
     );
 
     return muscleGroup.exercises;
+  }
+
+  void removeExerciseFromDay(int dayIndex, String muscleGroupName, String exerciseName) {
+    print('WorkoutPlanProvider: Removing exercise $exerciseName from day $dayIndex, muscle group $muscleGroupName');
+    if (_workoutPlan == null) {
+      print('WorkoutPlanProvider: Cannot remove exercise: workout plan is null');
+      return;
+    }
+
+    if (dayIndex < 0 || dayIndex >= _workoutPlan!.days.length) {
+      print('WorkoutPlanProvider: Cannot remove exercise: invalid day index $dayIndex');
+      return;
+    }
+
+    final day = _workoutPlan!.days[dayIndex];
+    final muscleGroupIndex = day.muscleGroups.indexWhere(
+      (mg) => mg.name == muscleGroupName,
+    );
+
+    if (muscleGroupIndex == -1) {
+      print('WorkoutPlanProvider: Cannot remove exercise: muscle group $muscleGroupName not found');
+      return;
+    }
+
+    final muscleGroup = day.muscleGroups[muscleGroupIndex];
+    final exerciseIndex = muscleGroup.exercises.indexWhere(
+      (e) => e.name == exerciseName,
+    );
+
+    if (exerciseIndex == -1) {
+      print('WorkoutPlanProvider: Cannot remove exercise: exercise $exerciseName not found');
+      return;
+    }
+
+    // Remove the exercise
+    muscleGroup.exercises.removeAt(exerciseIndex);
+    print('WorkoutPlanProvider: Removed exercise $exerciseName from muscle group $muscleGroupName');
+
+    // If this was the last exercise in the muscle group, remove the muscle group
+    if (muscleGroup.exercises.isEmpty) {
+      day.muscleGroups.removeAt(muscleGroupIndex);
+      print('WorkoutPlanProvider: Removed empty muscle group $muscleGroupName');
+    }
+
+    notifyListeners();
+    print('WorkoutPlanProvider: Notified listeners after removing exercise');
   }
 
   void clearError() {

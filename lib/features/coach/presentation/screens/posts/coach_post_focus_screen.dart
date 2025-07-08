@@ -211,7 +211,6 @@ class _CoachPostFocusScreenState extends State<CoachPostFocusScreen> {
               bottom: 0,
               child: BottomNavBar(
                 role: UserRole.coach,
-                currentIndex: 3, // Profile tab
               ),
             ),
           ],

@@ -2,23 +2,19 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 
-class ChatPreviewBubble extends StatelessWidget {
-  final String name;
-  final String lastMessage;
+class NotificationPreviewBubble extends StatelessWidget {
+  final String message;
   final String time;
   final String? imageUrl;
-  final bool unread;
-  final int unreadCount;
+  final bool is_read;
   final VoidCallback onTap;
 
-  const ChatPreviewBubble({
+  const NotificationPreviewBubble({
     super.key,
-    required this.name,
-    required this.lastMessage,
+    required this.message,
     required this.time,
     this.imageUrl,
-    this.unread = false,
-    this.unreadCount = 0,
+    this.is_read = true,
     required this.onTap,
   });
 
@@ -35,19 +31,19 @@ class ChatPreviewBubble extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            if (unread)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accent,
-                    shape: BoxShape.circle,
-                  ),
+            if (!is_read)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
                 ),
               ),
+            ),
             Positioned(
               top: 8,
               right: 12,
@@ -64,7 +60,7 @@ class ChatPreviewBubble extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Profile picture
                   Container(
@@ -86,21 +82,14 @@ class ChatPreviewBubble extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Chat preview
+                  // Notification preview
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          name,
-                          style: AppTheme.bodyMedium.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          lastMessage,
+                          message,
                           style: AppTheme.labelText,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -108,28 +97,6 @@ class ChatPreviewBubble extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (unread)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8, top: 20),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            unreadCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

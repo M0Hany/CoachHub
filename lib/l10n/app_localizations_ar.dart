@@ -191,6 +191,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get validation_username_format => 'يمكن أن يحتوي اسم المستخدم على أحرف وأرقام فقط';
 
   @override
+  String get passwordRequirementsTitle => 'متطلبات كلمة المرور:';
+
+  @override
+  String get passwordRequirementMinLength => '• 8 أحرف على الأقل';
+
+  @override
+  String get passwordRequirementCapital => '• حرف كبير واحد (A-Z)';
+
+  @override
+  String get passwordRequirementNumber => '• رقم واحد (0-9)';
+
+  @override
+  String get passwordRequirementMessage => 'يجب أن تكون كلمة المرور 8 أحرف على الأقل، وتحتوي على حرف كبير واحد ورقم واحد';
+
+  @override
   String get registerSuccess => 'تم التسجيل بنجاح! الرجاء إكمال ملفك الشخصي.';
 
   @override
@@ -227,6 +242,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsTitle => 'الإشعارات';
+
+  @override
+  String get noNotificationsYet => 'لا توجد إشعارات حتى الآن';
 
   @override
   String get notificationsToday => 'اليوم';
@@ -269,6 +287,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectExpertiseAreas => 'اختر مجالات خبرتك';
 
   @override
+  String get selectThreeExpertise => 'الرجاء تحديد 3 مجالات خبرة بالضبط';
+
+  @override
   String get weightTraining => 'تدريب الأوزان';
 
   @override
@@ -309,6 +330,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get enterBio => 'أدخل نبذة عنك';
+
+  @override
+  String get bio => 'نبذة';
 
   @override
   String get gender => 'الجنس';
@@ -395,6 +419,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fitnessGoals => 'أهدافك الرياضية';
 
   @override
+  String get selectGoals => 'Select your fitness goals';
+
+  @override
+  String get selectThreeGoals => 'الرجاء تحديد 3 أهداف بالضبط';
+
+  @override
   String get saveHealthData => 'حفظ البيانات الصحية';
 
   @override
@@ -402,6 +432,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get messages => 'الرسائل';
+
+  @override
+  String get noChatsYet => 'لا توجد محادثات حتى الآن';
+
+  @override
+  String get noMessagesYet => '!لا توجد رسائل بعد. ابدأ المحادثة';
+
+  @override
+  String get messageHint => '..رسالة';
 
   @override
   String get searchForClientsFields => 'البحث عن المتدربين';
@@ -513,6 +552,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get apply => 'تطبيق';
+
+  @override
+  String get notSet => 'غير محدد';
 
   @override
   String get selectDayFirst => 'الرجاء اختيار يوم أولاً';
@@ -679,6 +721,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get retry => 'إعادة المحاولة';
 
   @override
+  String get loginFailed => 'فشل تسجيل الدخول. يرجى التحقق من البيانات الخاصة بك.';
+
+  @override
+  String get typing => 'يكتب';
+
+  @override
   String get noTraineesSubscribed => 'لا يوجد متدربين مشتركين معك حتى الآن';
 
   @override
@@ -712,6 +760,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchForCoachesFields => 'البحث عن المدربين والمجالات..';
 
   @override
+  String get searchTitle => 'بحث';
+
+  @override
+  String get allFilter => 'الكل';
+
+  @override
+  String get recommendationsFilter => 'التوصيات';
+
+  @override
+  String get showProfile => 'عرض الملف الشخصي';
+
+  @override
+  String get viewCoach => 'عرض المدرب';
+
+  @override
   String get noRecommendedCoaches => 'لا يوجد مدربين موصى بهم';
 
   @override
@@ -730,6 +793,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get subscribeSuccess => 'تم إرسال طلب الاشتراك بنجاح';
+
+  @override
+  String get subscriptionRequestAcceptedSuccess => 'تم قبول طلب الاشتراك بنجاح';
 
   @override
   String get close => 'إغلاق';
@@ -896,6 +962,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unassignPlanError => 'فشل في إلغاء تعيين الخطة. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get traineeSubscriptionNotActive => 'قد لا يكون اشتراك المتدرب مفعل';
 
   @override
   String get endSubscription => 'إنهاء الاشتراك';

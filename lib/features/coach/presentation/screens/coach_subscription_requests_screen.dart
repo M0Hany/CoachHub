@@ -124,7 +124,8 @@ class _CoachSubscriptionRequestsScreenState extends State<CoachSubscriptionReque
       if (response.data?['status'] == 'success') {
         // Show success message
         if (mounted) {
-          await _showResultDialog(response.data!['message'] as String);
+          final l10n = AppLocalizations.of(context)!;
+          await _showResultDialog(l10n.subscriptionRequestAcceptedSuccess);
         }
         // Reload requests after action
         _loadRequests();
@@ -230,7 +231,6 @@ class _CoachSubscriptionRequestsScreenState extends State<CoachSubscriptionReque
               right: 0,
               child: BottomNavBar(
                 role: UserRole.coach,
-                currentIndex: 2, 
               ),
             ),
           ],

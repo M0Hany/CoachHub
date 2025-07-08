@@ -191,6 +191,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validation_username_format => 'Username can only contain letters and numbers';
 
   @override
+  String get passwordRequirementsTitle => 'Password Requirements:';
+
+  @override
+  String get passwordRequirementMinLength => '• At least 8 characters long';
+
+  @override
+  String get passwordRequirementCapital => '• One capital letter (A-Z)';
+
+  @override
+  String get passwordRequirementNumber => '• One number (0-9)';
+
+  @override
+  String get passwordRequirementMessage => 'Password must be at least 8 characters long, contain one capital letter, and one number';
+
+  @override
   String get registerSuccess => 'Registration successful! Please complete your profile.';
 
   @override
@@ -227,6 +242,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsTitle => 'Notifications';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
 
   @override
   String get notificationsToday => 'Today';
@@ -269,6 +287,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectExpertiseAreas => 'Select your areas of expertise';
 
   @override
+  String get selectThreeExpertise => 'Please select exactly 3 areas of expertise';
+
+  @override
   String get weightTraining => 'Weight Training';
 
   @override
@@ -309,6 +330,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterBio => 'Enter your bio';
+
+  @override
+  String get bio => 'Bio';
 
   @override
   String get gender => 'Gender';
@@ -395,6 +419,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fitnessGoals => 'Fitness Goals';
 
   @override
+  String get selectGoals => 'Select your fitness goals';
+
+  @override
+  String get selectThreeGoals => 'Please select exactly 3 goals';
+
+  @override
   String get saveHealthData => 'Save Health Data';
 
   @override
@@ -402,6 +432,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messages => 'Messages';
+
+  @override
+  String get noChatsYet => 'No chats yet';
+
+  @override
+  String get noMessagesYet => 'No messages yet. Start the conversation!';
+
+  @override
+  String get messageHint => 'message..';
 
   @override
   String get searchForClientsFields => 'Search for clients';
@@ -513,6 +552,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get apply => 'Apply';
+
+  @override
+  String get notSet => 'Not Set';
 
   @override
   String get selectDayFirst => 'Please select a day first';
@@ -679,6 +721,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
+  String get loginFailed => 'Login failed. Please check your credentials.';
+
+  @override
+  String get typing => 'Typing';
+
+  @override
   String get noTraineesSubscribed => 'No trainees are subscribed to you yet';
 
   @override
@@ -712,6 +760,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchForCoachesFields => 'Search for Coaches, fields..';
 
   @override
+  String get searchTitle => 'Search';
+
+  @override
+  String get allFilter => 'All';
+
+  @override
+  String get recommendationsFilter => 'Recommendations';
+
+  @override
+  String get showProfile => 'Show Profile';
+
+  @override
+  String get viewCoach => 'View Coach';
+
+  @override
   String get noRecommendedCoaches => 'No recommended coaches available';
 
   @override
@@ -730,6 +793,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscribeSuccess => 'Subscription request sent successfully';
+
+  @override
+  String get subscriptionRequestAcceptedSuccess => 'Subscription request accepted successfully';
 
   @override
   String get close => 'Close';
@@ -896,6 +962,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unassignPlanError => 'Failed to unassign plan. Please try again.';
+
+  @override
+  String get traineeSubscriptionNotActive => 'Trainee subscription might not be active.';
 
   @override
   String get endSubscription => 'End Subscription';

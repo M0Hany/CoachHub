@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../../../core/providers/language_provider.dart';
 import '../../../../../../features/auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../../features/auth/presentation/widgets/language_dialog.dart';
 
 class TraineeSettingsScreen extends StatelessWidget {
   const TraineeSettingsScreen({super.key});
@@ -32,6 +33,16 @@ class TraineeSettingsScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.language,
+              color: AppTheme.primary,
+            ),
+            onPressed: () => showLanguageDialog(context),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -53,7 +64,7 @@ class TraineeSettingsScreen extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: Text(l10n.logout),
-                    content: const Text('Are you sure you want to logout?'),
+                    content: Text(l10n.logoutConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
@@ -100,7 +111,6 @@ class TraineeSettingsScreen extends StatelessWidget {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.trainee,
-        currentIndex: 3,
       ),
     );
   }

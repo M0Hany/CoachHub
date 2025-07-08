@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../../../core/theme/app_colors.dart';
 import '../muscle/muscle_selection_screen.dart';
 import '../../../../../../../l10n/app_localizations.dart';
+import '../../../../../../../core/network/http_client.dart';
 
 class WorkoutPlanCalendarScreen extends StatefulWidget {
   final int planId;
@@ -29,7 +30,9 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late final int _totalPages;
-  late final WorkoutPlanProvider _workoutProvider;
+  WorkoutPlanProvider? _workoutProvider;
+  bool _isInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -43,19 +46,38 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _workoutProvider = context.read<WorkoutPlanProvider>();
-    _initializeWorkoutPlan();
+    
+    // Check if we need to reinitialize (e.g., plan ID changed)
+    final currentPlanId = _workoutProvider?.workoutId;
+    if (currentPlanId != widget.planId) {
+      _isInitialized = false;
+    }
+    
+    // Use WidgetsBinding.instance.addPostFrameCallback to avoid calling during build
+    if (!_isInitialized && !_isDisposed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isDisposed) {
+          _initializeWorkoutPlan();
+        }
+      });
+    }
   }
 
   Future<void> _initializeWorkoutPlan() async {
+    if (_isInitialized || _isDisposed || _workoutProvider == null) {
+      print('WorkoutPlanCalendarScreen: Already initialized, disposed, or provider is null, skipping');
+      return;
+    }
+    
     print('WorkoutPlanCalendarScreen: _initializeWorkoutPlan started for planId: ${widget.planId}');
     try {
       print('WorkoutPlanCalendarScreen: Calling fetchWorkoutPlanDetails with planId: ${widget.planId}');
-      _workoutProvider.setWorkoutId(widget.planId);
-      await _workoutProvider.fetchWorkoutPlanDetails(widget.planId);
+      _workoutProvider!.setWorkoutId(widget.planId);
+      await _workoutProvider!.fetchWorkoutPlanDetails(widget.planId);
       print('WorkoutPlanCalendarScreen: Successfully fetched plan details');
       
       // Log the fetched plan details
-      final plan = _workoutProvider.workoutPlan;
+      final plan = _workoutProvider!.workoutPlan;
       print('WorkoutPlanCalendarScreen: Fetched plan details:');
       print('  - Plan ID: ${plan?.id}');
       print('  - Title: ${plan?.title}');
@@ -66,15 +88,22 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
           print('  - Day ${day.dayNumber}: ${day.muscleGroups.map((g) => g.name).join(', ')}');
         }
       }
+      
+      _isInitialized = true;
     } catch (e) {
       print('WorkoutPlanCalendarScreen: Error fetching plan details: $e');
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load workout plan: ${e.toString()}'),
             action: SnackBarAction(
               label: 'Retry',
-              onPressed: _initializeWorkoutPlan,
+              onPressed: () {
+                if (!_isDisposed) {
+                  _isInitialized = false;
+                  _initializeWorkoutPlan();
+                }
+              },
             ),
           ),
         );
@@ -128,6 +157,7 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
   @override
   void dispose() {
     print('WorkoutPlanCalendarScreen: dispose called');
+    _isDisposed = true;
     _pageController.dispose();
     super.dispose();
   }
@@ -388,8 +418,12 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                                 behavior: HitTestBehavior.opaque,
                                                 onTap: () {
                                                   provider.selectDay(dayNumber - 1);
+                                                  // Extract muscle group names from the day data
+                                                  final selectedMuscles = dayData.muscleGroups.map((group) => group.name).toList();
+                                                  print('WorkoutPlanCalendarScreen: Selected muscles passed: ${selectedMuscles}');
                                                   context.push('/coach/plans/workout/muscles', extra: {
                                                     'day_number': dayNumber,
+                                                    'selected_muscles': selectedMuscles,
                                                   });
                                                 },
                                                 child: SizedBox(
@@ -399,34 +433,47 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                                                       Expanded(
                                                         child: Padding(
                                                           padding: const EdgeInsets.all(16.0),
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            children: [
-                                                              if (dayData.muscleGroups.isNotEmpty)
-                                                                ...dayData.muscleGroups.map((group) {
-                                                                  return Row(
-                                                                    children: [
-                                                                      Container(
-                                                                        width: 8,
-                                                                        height: 8,
-                                                                        margin: const EdgeInsets.only(right: 8),
-                                                                        decoration: BoxDecoration(
-                                                                          color: AppColors.accent,
-                                                                          shape: BoxShape.circle,
+                                                          child: dayData.muscleGroups.isNotEmpty
+                                                              ? SingleChildScrollView(
+                                                                  physics: const BouncingScrollPhysics(),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                                    children: dayData.muscleGroups.map((group) {
+                                                                      return Padding(
+                                                                        padding: const EdgeInsets.only(bottom: 4.0),
+                                                                        child: GestureDetector(
+                                                                          onTap: () {
+                                                                            _showExercisesDialog(context, group, dayNumber);
+                                                                          },
+                                                                          child: Row(
+                                                                            children: [
+                                                                              Container(
+                                                                                width: 8,
+                                                                                height: 8,
+                                                                                margin: const EdgeInsetsDirectional.only(end: 8),
+                                                                                decoration: const BoxDecoration(
+                                                                                  color: AppColors.accent,
+                                                                                  shape: BoxShape.circle,
+                                                                                ),
+                                                                              ),
+                                                                              Expanded(
+                                                                                child: Text(
+                                                                                  group.name,
+                                                                                  style: AppTheme.headerMedium.copyWith(
+                                                                                    fontSize: 14,
+                                                                                  ),
+                                                                                  overflow: TextOverflow.ellipsis,
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
                                                                         ),
-                                                                      ),
-                                                                      Text(
-                                                                        group.name,
-                                                                        style: AppTheme.headerMedium.copyWith(
-                                                                          fontSize: 14,
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  );
-                                                                })
-                                                            ],
-                                                          ),
+                                                                      );
+                                                                    }).toList(),
+                                                                  ),
+                                                                )
+                                                              : const SizedBox.shrink(),
                                                         ),
                                                       ),
                                                       const Padding(
@@ -498,12 +545,369 @@ class _WorkoutPlanCalendarScreenState extends State<WorkoutPlanCalendarScreen> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: const BottomNavBar(role: UserRole.coach, currentIndex: 0),
+                child: const BottomNavBar(role: UserRole.coach),
               ),
             ],
           ),
         );
       },
     );
+  }
+
+  void _showExercisesDialog(BuildContext context, MuscleGroup muscleGroup, int dayNumber) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Day $dayNumber - ${muscleGroup.name}',
+                              style: AppTheme.headerLarge.copyWith(
+                                color: Colors.white,
+                                fontSize: 20,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${muscleGroup.exercises.length} exercises',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                // Exercises List
+                Expanded(
+                  child: muscleGroup.exercises.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.fitness_center,
+                                size: 64,
+                                color: Colors.grey.withOpacity(0.5),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No exercises added yet',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Container(
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                            child: Stack(
+                              children: [
+                                Theme(
+                                  data: Theme.of(context).copyWith(
+                                    scrollbarTheme: ScrollbarThemeData(
+                                      thumbColor: MaterialStateProperty.all(AppColors.accent),
+                                    ),
+                                  ),
+                                  child: Scrollbar(
+                                    child: ListView.separated(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                                      itemCount: muscleGroup.exercises.length,
+                                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                                      itemBuilder: (context, index) {
+                                        final exercise = muscleGroup.exercises[index];
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: ListTile(
+                                            contentPadding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 4,
+                                            ),
+                                            leading: Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: const  BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: AppColors.accent,
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.fitness_center,
+                                                  color: AppColors.primary,
+                                                  size: 16,
+                                                ),
+                                              ),
+                                            ),
+                                            title: Text(
+                                              exercise.name,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${exercise.sets} sets × ${exercise.reps} reps',
+                                                  style: AppTheme.bodySmall.copyWith(
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                                if (exercise.restTime > 0)
+                                                  Text(
+                                                    'Rest: ${exercise.restTime}s',
+                                                    style: AppTheme.bodySmall.copyWith(
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                if (exercise.note != null && exercise.note!.isNotEmpty)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 4),
+                                                    child: Text(
+                                                      'Note: ${exercise.note}',
+                                                      style: AppTheme.bodySmall.copyWith(
+                                                        color: Colors.grey[600],
+                                                        fontStyle: FontStyle.italic,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            subtitleTextStyle: AppTheme.bodySmall,
+                                            isThreeLine: exercise.note != null && exercise.note!.isNotEmpty,
+                                            trailing: IconButton(
+                                              onPressed: () => _showDeleteExerciseConfirmation(
+                                                context,
+                                                exercise,
+                                                muscleGroup,
+                                                dayNumber,
+                                              ),
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                                size: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                // Gradient overlays
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height: 24,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          AppColors.primary,
+                                          AppColors.primary.withOpacity(0),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height: 24,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          AppColors.primary,
+                                          AppColors.primary.withOpacity(0),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteExerciseConfirmation(
+    BuildContext context,
+    Exercise exercise,
+    MuscleGroup muscleGroup,
+    int dayNumber,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.delete,
+                color: Colors.red,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text('Delete Exercise'),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete "${exercise.name}" from Day $dayNumber - ${muscleGroup.name}?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteExercise(exercise, muscleGroup, dayNumber);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteExercise(
+    Exercise exercise,
+    MuscleGroup muscleGroup,
+    int dayNumber,
+  ) async {
+    if (_isDisposed) {
+      print('WorkoutPlanCalendarScreen: Cannot delete exercise - widget is disposed');
+      return;
+    }
+    
+    try {
+      final provider = context.read<WorkoutPlanProvider>();
+      final workoutId = provider.workoutId;
+      
+      if (workoutId == null) {
+        throw Exception('No workout ID available');
+      }
+
+      // Call the API to delete the exercise
+      final httpClient = HttpClient();
+      final response = await httpClient.put<Map<String, dynamic>>(
+        '/api/plans/workout/$workoutId',
+        data: {
+          'title': provider.workoutPlan?.title ?? 'Workout Plan',
+          'days': [
+            {
+              'day_number': dayNumber,
+              'add_exercises': [],
+              'remove_exercise_ids': [exercise.id ?? 0],
+              'update_exercises': [],
+            }
+          ]
+        },
+      );
+
+      if (response.data?['status'] == 'success') {
+        // Update local state immediately
+        provider.removeExerciseFromDay(dayNumber - 1, muscleGroup.name, exercise.name);
+        
+        // Close the exercises dialog if it's open
+        if (mounted && !_isDisposed && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        
+        // Show success message
+        if (mounted && !_isDisposed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Exercise "${exercise.name}" deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to delete exercise');
+      }
+    } catch (e) {
+      print('Error deleting exercise: $e');
+      if (mounted && !_isDisposed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting exercise: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 } 

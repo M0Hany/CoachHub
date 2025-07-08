@@ -374,7 +374,6 @@ class _TraineeCoachPostsScreenState extends State<TraineeCoachPostsScreen> {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.trainee,
-        currentIndex: 0,
       ),
     );
   }

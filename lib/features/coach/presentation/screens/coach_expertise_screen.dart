@@ -112,7 +112,7 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0D122A)),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -136,7 +136,7 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Please select exactly 3 areas of expertise',
+              l10n.selectThreeExpertise,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -162,7 +162,7 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
                         if (selectedExpertiseIds.length < requiredExpertiseCount) {
                           selectedExpertiseIds.add(field.id);
                         } else {
-                          _showErrorSnackBar('You can only select 3 areas of expertise');
+                          _showErrorSnackBar(l10n.selectThreeExpertise);
                         }
                       } else {
                         selectedExpertiseIds.remove(field.id);
@@ -173,7 +173,7 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
                   selectedColor: AppTheme.primaryButtonColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(color: AppTheme.primaryButtonColor, width: 1.5),
+                    side: const BorderSide(color: AppTheme.primaryButtonColor, width: 1.5),
                   ),
                   showCheckmark: false,
                   elevation: 0,
@@ -229,9 +229,9 @@ class _CoachExpertiseScreenState extends State<CoachExpertiseScreen> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text(
-                    'Next',
-                    style: TextStyle(
+                : Text(
+                    l10n.next,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),

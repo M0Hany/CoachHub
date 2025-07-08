@@ -5,7 +5,6 @@ import '../../../../../../../core/theme/app_theme.dart';
 import '../../../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../../../core/constants/enums.dart';
 import '../../../../providers/nutrition/nutrition_plan_provider.dart';
-import '../../../../../data/models/nutrition/nutrition_plan_model.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../l10n/app_localizations.dart';
@@ -480,7 +479,7 @@ class _NutritionPlanCalendarScreenState extends State<NutritionPlanCalendarScree
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: const BottomNavBar(role: UserRole.coach, currentIndex: 0),
+                child: const BottomNavBar(role: UserRole.coach),
               ),
             ],
           ),

@@ -423,7 +423,7 @@ class _NutritionPlanDetailsScreenState extends State<NutritionPlanDetailsScreen>
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: const BottomNavBar(role: UserRole.trainee, currentIndex: 2), // Home tab
+                child: const BottomNavBar(role: UserRole.trainee), // Home tab
               ),
             ],
           ),

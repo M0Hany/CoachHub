@@ -9,6 +9,7 @@ import '../../../../../../core/constants/enums.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/providers/language_provider.dart';
 import '../../../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../../../features/auth/presentation/widgets/language_dialog.dart';
 
 class CoachSettingsScreen extends StatelessWidget {
   const CoachSettingsScreen({super.key});
@@ -34,6 +35,16 @@ class CoachSettingsScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.language,
+              color: AppTheme.primary,
+            ),
+            onPressed: () => showLanguageDialog(context),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -55,7 +66,7 @@ class CoachSettingsScreen extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: Text(l10n.logout),
-                    content: const Text('Are you sure you want to logout?'),
+                    content: Text(l10n.logoutConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
@@ -102,7 +113,6 @@ class CoachSettingsScreen extends StatelessWidget {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.coach,
-        currentIndex: 3,
       ),
     );
   }

@@ -283,19 +283,25 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
 
                   // Clients grid
                   Expanded(
-                    child: _totalClients == 0
-                        ? Center(
-                            child: Text(
-                              l10n.noTraineesSubscribed,
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
+                    child: RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: _totalClients == 0
+                          ? SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: Center(
+                                  child: Text(
+                                    l10n.noTraineesSubscribed,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: GridView.builder(
+                            )
+                          : GridView.builder(
                               padding: const EdgeInsets.only(
                                 left: 16,
                                 right: 16,
@@ -329,7 +335,6 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
                                     children: [
                                       Container(
                                         width: 74,
-                                        height: 74,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
@@ -345,16 +350,6 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        l10n.ageGender(
-                                          client['age'].toString(),
-                                          client['gender'] as String,
-                                        ),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
                                         ),
                                       ),
                                       const SizedBox(height: 6),
@@ -384,7 +379,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
                                 );
                               },
                             ),
-                          ),
+                    ),
                   ),
                 ],
               ),

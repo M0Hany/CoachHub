@@ -178,7 +178,6 @@ class TraineeCoachPostFocusScreen extends StatelessWidget {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.trainee,
-        currentIndex: 0,
       ),
     );
   }

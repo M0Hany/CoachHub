@@ -80,10 +80,18 @@ class ThirdOnboardingScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 20),
                       Center(
-                        child: Image.asset(
-                          'assets/images/onboarding/stretching_person.png',
-                          height: 350,
-                          fit: BoxFit.contain,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate responsive height based on screen size
+                            final screenHeight = MediaQuery.of(context).size.height;
+                            final imageHeight = (screenHeight * 0.4).clamp(250.0, 400.0); // 40% of screen height, min 250, max 400
+                            
+                            return Image.asset(
+                              'assets/images/onboarding/stretching_person.png',
+                              height: imageHeight,
+                              fit: BoxFit.contain,
+                            );
+                          },
                         ),
                       ),
                       Padding(
@@ -103,6 +111,9 @@ class ThirdOnboardingScreen extends StatelessWidget {
                                     fontSize: 28,
                                     height: 1.2,
                                   ),
+                                  maxLines: 2,
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -221,9 +232,12 @@ class ThirdOnboardingScreen extends StatelessWidget {
               fontSize: 9,
               color: Colors.white,
             ),
+            maxLines: 3,
+            softWrap: true,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-        ),
+      ),
     );
   }
 } 

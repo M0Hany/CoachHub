@@ -357,37 +357,45 @@ class _WorkoutPlanDetailsScreenState extends State<WorkoutPlanDetailsScreen> {
                                               child: Row(
                                                 children: [
                                                   Expanded(
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.all(16.0),
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: [
-                                                          if (dayData['exercises']?.isNotEmpty ?? false)
-                                                            ..._getUniqueMusclesForDay(dayData['exercises']).map((muscle) {
-                                                              return Row(
-                                                                children: [
-                                                                  Container(
-                                                                    width: 8,
-                                                                    height: 8,
-                                                                    margin: const EdgeInsets.only(right: 8),
-                                                                    decoration: const BoxDecoration(
-                                                                      color: AppColors.accent,
-                                                                      shape: BoxShape.circle,
-                                                                    ),
+                                                                                                      child: Padding(
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    child: dayData['exercises']?.isNotEmpty ?? false
+                                                        ? SingleChildScrollView(
+                                                            physics: const BouncingScrollPhysics(),
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: _getUniqueMusclesForDay(dayData['exercises']).map((muscle) {
+                                                                return Padding(
+                                                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                                                  child: Row(
+                                                                    children: [
+                                                                      Container(
+                                                                        width: 8,
+                                                                        height: 8,
+                                                                        margin: const EdgeInsetsDirectional.only(end: 8),
+                                                                        decoration: const BoxDecoration(
+                                                                          color: AppColors.accent,
+                                                                          shape: BoxShape.circle,
+                                                                        ),
+                                                                      ),
+                                                                      Expanded(
+                                                                        child: Text(
+                                                                          muscle,
+                                                                          style: AppTheme.headerMedium.copyWith(
+                                                                            fontSize: 14,
+                                                                          ),
+                                                                          overflow: TextOverflow.ellipsis,
+                                                                        ),
+                                                                      ),
+                                                                    ],
                                                                   ),
-                                                                  Text(
-                                                                    muscle,
-                                                                    style: AppTheme.headerMedium.copyWith(
-                                                                      fontSize: 14,
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              );
-                                                            }).toList(),
-                                                        ],
-                                                      ),
-                                                    ),
+                                                                );
+                                                              }).toList(),
+                                                            ),
+                                                          )
+                                                        : const SizedBox.shrink(),
+                                                  ),
                                                   ),
                                                   if (dayData['exercises']?.isNotEmpty ?? false)
                                                     const Padding(

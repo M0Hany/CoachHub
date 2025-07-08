@@ -104,44 +104,4 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  void _showSocketTestDialog(BuildContext context) {
-    final chatProvider = context.read<ChatProvider>();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Socket.IO Test'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Connected: ${chatProvider.isConnected}'),
-            Text('Connecting: ${chatProvider.isConnecting}'),
-            Text('Current User ID: ${chatProvider.currentUserId}'),
-            Text('Current Recipient ID: ${chatProvider.currentRecipientId}'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () => chatProvider.initialize(),
-                  child: const Text('Connect'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => chatProvider.disconnect(),
-                  child: const Text('Disconnect'),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 }

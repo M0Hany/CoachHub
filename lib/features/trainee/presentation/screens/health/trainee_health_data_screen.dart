@@ -26,6 +26,7 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
   double _fatPercentage = 10.0;
   double _musclePercentage = 10.0;
   final List<int> _selectedGoalIds = [];
+  static const int requiredGoalCount = 3;
   bool _isFetchingData = true;
   List<Goal> _goals = [];
   String? _error;
@@ -366,6 +367,14 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
               const SizedBox(height: 32),
               Text(l10n.fitnessGoals, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
+              Text(
+                l10n.selectThreeGoals,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 8.0,
                 runSpacing: 8.0,
@@ -382,7 +391,11 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
                     onSelected: (bool selected) {
                       setState(() {
                         if (selected) {
-                          _selectedGoalIds.add(goal.id);
+                          if (_selectedGoalIds.length < requiredGoalCount) {
+                            _selectedGoalIds.add(goal.id);
+                          } else {
+                            _showErrorSnackBar('You can only select 3 fitness goals');
+                          }
                         } else {
                           _selectedGoalIds.remove(goal.id);
                         }
@@ -408,7 +421,7 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
                   onPressed: _isSubmitting
                       ? null
                       : () async {
-                          if (_formKey.currentState!.validate() && _selectedGoalIds.isNotEmpty) {
+                          if (_formKey.currentState!.validate() && _selectedGoalIds.length == requiredGoalCount) {
                             setState(() => _isSubmitting = true);
                             try {
                       final authProvider = context.read<AuthProvider>();
@@ -434,8 +447,8 @@ class _TraineeHealthDataScreenState extends State<TraineeHealthDataScreen> {
                                 setState(() => _isSubmitting = false);
                               }
                             }
-                          } else if (_selectedGoalIds.isEmpty) {
-                            _showErrorSnackBar('Please select at least one goal');
+                          } else if (_selectedGoalIds.length != requiredGoalCount) {
+                            _showErrorSnackBar(l10n.selectThreeGoals);
                     }
                   },
                   style: ElevatedButton.styleFrom(

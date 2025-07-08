@@ -301,7 +301,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: const BottomNavBar(role: UserRole.coach, currentIndex: 0),
+            child: const BottomNavBar(role: UserRole.coach),
           ),
         ],
       ),

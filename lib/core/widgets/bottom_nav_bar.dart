@@ -7,12 +7,12 @@ import 'package:go_router/go_router.dart';
 
 class BottomNavBar extends StatefulWidget {
   final UserRole role;
-  final int currentIndex;
+  final int? currentIndex;
 
   const BottomNavBar({
     Key? key,
     required this.role,
-    required this.currentIndex,
+    this.currentIndex,
   }) : super(key: key);
 
   @override
@@ -44,27 +44,32 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
       ),
     );
 
+    // Only animate if currentIndex is not null
+    if (widget.currentIndex != null) {
     _positionAnimation = Tween<double>(
       begin: _previousPosition,
-      end: widget.currentIndex.toDouble(),
+        end: widget.currentIndex!.toDouble(),
     ).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOut,
       ),
     );
-
     _controller.forward();
+    }
   }
 
   @override
   void didUpdateWidget(BottomNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
-      _previousPosition = oldWidget.currentIndex.toDouble();
+      _previousPosition = (oldWidget.currentIndex ?? 0).toDouble();
+      
+      // Only animate if currentIndex is not null
+      if (widget.currentIndex != null) {
       _positionAnimation = Tween<double>(
         begin: _previousPosition,
-        end: widget.currentIndex.toDouble(),
+          end: widget.currentIndex!.toDouble(),
       ).animate(
         CurvedAnimation(
           parent: _controller,
@@ -72,6 +77,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
         ),
       );
       _controller.forward(from: 0);
+      }
     }
   }
 
@@ -82,7 +88,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
   }
 
   void _onItemTapped(int index) {
-    if (index == widget.currentIndex) return;
+    if (widget.currentIndex != null && index == widget.currentIndex) return;
     
     switch (index) {
       case 0:
@@ -135,7 +141,8 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
               ),
             ),
           ),
-          // Cutout curve under the floating icon
+          // Cutout curve under the floating icon (only show if currentIndex is not null)
+          if (widget.currentIndex != null)
           AnimatedBuilder(
             animation: _positionAnimation,
             builder: (context, child) {
@@ -161,7 +168,8 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
               );
             },
           ),
-          // Animated floating circle with selected icon
+          // Animated floating circle with selected icon (only show if currentIndex is not null)
+          if (widget.currentIndex != null)
           AnimatedBuilder(
             animation: _positionAnimation,
             builder: (context, child) {
@@ -194,7 +202,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                     ),
                     child: Center(
                       child: Image.asset(
-                        navItems[widget.currentIndex]['active']!,
+                          navItems[widget.currentIndex!]['active']!,
                         width: 28,
                         height: 28,
                       ),
@@ -213,7 +221,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(4, (index) {
-                final isSelected = index == widget.currentIndex;
+                final isSelected = widget.currentIndex != null && index == widget.currentIndex;
                 return _buildNavItem(
                   navItems[index]['inactive']!,
                   navItems[index]['label']!,

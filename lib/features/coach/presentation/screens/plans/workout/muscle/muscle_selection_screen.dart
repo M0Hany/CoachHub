@@ -10,10 +10,12 @@ import 'package:go_router/go_router.dart';
 
 class MuscleSelectionScreen extends StatefulWidget {
   final int dayNumber;
+  final List<String>? selectedMuscles;
 
   const MuscleSelectionScreen({
     super.key,
     required this.dayNumber,
+    this.selectedMuscles,
   });
 
   @override
@@ -29,6 +31,7 @@ class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
   void initState() {
     super.initState();
     print('MuscleSelectionScreen: Initializing with day number: ${widget.dayNumber}');
+    print('MuscleSelectionScreen: Selected muscles passed: ${widget.selectedMuscles}');
     _loadMuscles();
   }
 
@@ -47,6 +50,7 @@ class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
           _isLoading = false;
         });
         print('MuscleSelectionScreen: Loaded ${_muscles.length} muscles');
+        print('MuscleSelectionScreen: Available muscles from backend: $_muscles');
       }
     } catch (e) {
       print('MuscleSelectionScreen: Error loading muscles: $e');
@@ -138,6 +142,9 @@ class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
                             separatorBuilder: (context, index) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final muscle = _muscles[index];
+                              final isSelected = widget.selectedMuscles?.contains(muscle) ?? false;
+                              print('MuscleSelectionScreen: Checking muscle "$muscle" - isSelected: $isSelected');
+                              print('MuscleSelectionScreen: Selected muscles list: ${widget.selectedMuscles}');
                               return Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -151,10 +158,22 @@ class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
                                   leading: Container(
                                     width: 32,
                                     height: 32,
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Color(0xFFD9D9D9),
+                                      color: isSelected ? AppColors.accent : const Color(0xFFD9D9D9),
                                     ),
+                                    child: isSelected
+                                        ? Center(
+                                            child: Container(
+                                              width: 12,
+                                              height: 12,
+                                              decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          )
+                                        : null,
                                   ),
                                   title: Text(
                                     muscle,
@@ -222,7 +241,7 @@ class _MuscleSelectionScreenState extends State<MuscleSelectionScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(role: UserRole.coach, currentIndex: 0),
+      bottomNavigationBar: const BottomNavBar(role: UserRole.coach),
     );
   }
 } 

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../models/user_model.dart';
+import '../widgets/language_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,56 +31,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _showLanguageDialog() {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
-    final isArabic = languageProvider.currentLocale.languageCode == 'ar';
-    final l10n = AppLocalizations.of(context)!;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.language),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              onTap: () {
-                languageProvider.changeLanguage('en');
-                Navigator.pop(context);
-              },
-              title: const Text('English'),
-              trailing: !isArabic
-                  ? const Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF0FF789),
-                    )
-                  : null,
-            ),
-            ListTile(
-              onTap: () {
-                languageProvider.changeLanguage('ar');
-                Navigator.pop(context);
-              },
-              title: const Text('العربية'),
-              trailing: isArabic
-                  ? const Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF0FF789),
-                    )
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       final authProvider = context.read<AuthProvider>();
       final response = await authProvider.login(
         _usernameController.text,
@@ -104,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go('/trainee/home');
         }
       } else {
-        final error = authProvider.error ?? 'Login failed. Please check your credentials.';
+        final error = l10n.loginFailed;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error),
@@ -144,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Icons.language,
               color: AppTheme.accent,
             ),
-            onPressed: _showLanguageDialog,
+            onPressed: () => showLanguageDialog(context),
           ),
           const SizedBox(width: 8),
         ],
@@ -237,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                color: Color(0xFF8E8E93),
+                                color: AppTheme.authHintText,
                               ),
                               onPressed: () {
                                 setState(() {

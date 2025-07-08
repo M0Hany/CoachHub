@@ -14,18 +14,17 @@ import 'package:dio/dio.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/presentation/providers/auth_provider.dart';
 import '../../core/services/token_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String recipientId;
   final String recipientName;
-  final int currentUserId;
   final String? chatId;
 
   const ChatRoomScreen({
     Key? key,
     required this.recipientId,
     required this.recipientName,
-    required this.currentUserId,
     this.chatId,
   }) : super(key: key);
 
@@ -213,7 +212,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       developer.log('[ChatRoom] Triggering fetchOlderMessages (infinite scroll)', name: 'ChatRoomScreen');
       chatProvider.fetchOlderMessages(
         otherUserId: chatProvider.otherUserId!,
-        currentUserId: chatProvider.currentUserId!,
       );
     }
   }
@@ -228,7 +226,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         setState(() { _isPaginating = true; });
         await chatProvider.fetchOlderMessages(
           otherUserId: chatProvider.otherUserId!,
-          currentUserId: chatProvider.currentUserId!,
         );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (beforeLoadScrollOffset != null && beforeLoadContentHeight != null && _scrollController.hasClients) {
@@ -268,10 +265,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         // Reverse so oldest is at the top, newest at the bottom
         final reversedMessages = List.from(messages.reversed);
         final chatProvider = context.read<ChatProvider>();
-        chatProvider.setCurrentChat(widget.recipientId, widget.currentUserId);
+        chatProvider.setCurrentChat(widget.recipientId);
         chatProvider.loadChatHistoryFromApi(
           reversedMessages,
-          widget.currentUserId,
           otherUserId,
           currentPage: currentPage,
           totalPages: totalPages,
@@ -288,6 +284,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final radius = const Radius.circular(30);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -296,7 +293,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       ),
       child: Scaffold(
         backgroundColor: AppTheme.primary,
-        body: Stack(
+        body: Directionality(
+          textDirection: TextDirection.ltr, // Force LTR for chat interface
+          child: Stack(
           children: [
             Column(
         children: [
@@ -395,10 +394,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                 return const Center(child: CircularProgressIndicator());
                               }
                               if (chatProvider.messages.isEmpty) {
-                                return const Center(
+                                return Center(
                                   child: Text(
-                                    'No messages yet. Start the conversation!',
-                                    style: TextStyle(color: Colors.grey),
+                                    l10n.noMessagesYet,
+                                    style: const TextStyle(color: Colors.grey),
                                   ),
                                 );
                               }
@@ -529,7 +528,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                   fontFamily: 'Alexandria',
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'message..',
+                                  hintText: l10n.messageHint,
                               border: InputBorder.none,
                                   hintStyle: const TextStyle(
                                     color: Colors.black54,
@@ -562,6 +561,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

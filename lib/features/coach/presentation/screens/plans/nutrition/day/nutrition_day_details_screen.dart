@@ -4,7 +4,6 @@ import '../../../../../../../core/theme/app_theme.dart';
 import '../../../../../../../core/widgets/bottom_nav_bar.dart';
 import '../../../../../../../core/constants/enums.dart';
 import '../../../../providers/nutrition/nutrition_plan_provider.dart';
-import '../../../../../data/models/nutrition/nutrition_plan_model.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../../core/widgets/custom_text_field.dart';
 import '../../../../../../../core/widgets/primary_button.dart';
@@ -168,7 +167,7 @@ class _NutritionDayDetailsScreenState extends State<NutritionDayDetailsScreen> {
               ),
               const Align(
                 alignment: Alignment.bottomCenter,
-                child: BottomNavBar(role: UserRole.coach, currentIndex: 0),
+                child: BottomNavBar(role: UserRole.coach),
               ),
             ],
           ),

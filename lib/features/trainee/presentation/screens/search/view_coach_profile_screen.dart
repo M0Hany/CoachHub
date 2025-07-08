@@ -162,6 +162,11 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
     }
   }
 
+  String _formatExpertise(List<Experience>? experiences, AppLocalizations l10n) {
+    if (experiences == null || experiences.isEmpty) return l10n.notSet;
+    return experiences.map((e) => e.name).join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -230,8 +235,6 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
                 extra: {
                   'recipientId': widget.coachId,
                   'recipientName': _coach?.fullName ?? 'Coach',
-                  'currentUserId': 4, // TODO: Get from auth provider
-                  'chatId': null, // TODO: Get chat ID if available
                 },
               );
             },
@@ -315,7 +318,7 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
                       children: [
                         Text(
                           l10n.personalInfo,
-                          style: AppTheme.bodyLarge,
+                          style: AppTheme.bodyMedium,
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -342,41 +345,8 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
                     ),
                   ),
                   if (_coach!.bio != null)
-                    _buildInfoRow(Icons.info_outline, 'Bio', _coach!.bio!),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.fitness_center, size: 20, color: Colors.black87),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.coachExpertFields,
-                              style: AppTheme.labelText,
-                            ),
-                            if (_coach!.experiences.isNotEmpty)
-                              ..._coach!.experiences.map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    e.name,
-                                    style: AppTheme.mainText,
-                                  ),
-                                ),
-                              )
-                            else
-                              Text(
-                                'Not set',
-                                style: AppTheme.mainText,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                    _buildInfoRow(Icons.info_outline, l10n.bio, _coach!.bio!),
+                  _buildInfoRow(Icons.fitness_center, l10n.coachExpertFields, _formatExpertise(_coach!.experiences, l10n)),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -624,7 +594,6 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.trainee,
-        currentIndex: 0,
       ),
     );
   }
@@ -633,21 +602,33 @@ class _ViewCoachProfileScreenState extends State<ViewCoachProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: Colors.black87),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: AppTheme.labelText,
-              ),
-              Text(
-                value,
-                style: AppTheme.mainText,
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Alexandria',
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontFamily: 'Alexandria',
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  softWrap: true,
+                ),
+              ],
+            ),
           ),
         ],
       ),

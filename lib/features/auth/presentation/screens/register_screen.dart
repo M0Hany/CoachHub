@@ -58,10 +58,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (value == null || value.isEmpty) {
       return AppLocalizations.of(context)!.validation_required;
     }
-    if (value.length < 8) {
-      return AppLocalizations.of(context)!.validation_password_length;
+    
+    // Check password strength
+    bool hasMinLength = value.length >= 8;
+    bool hasCapitalLetter = RegExp(r'[A-Z]').hasMatch(value);
+    bool hasNumber = RegExp(r'[0-9]').hasMatch(value);
+    
+    if (!hasMinLength || !hasCapitalLetter || !hasNumber) {
+      return AppLocalizations.of(context)!.passwordRequirementMessage;
     }
+    
     return null;
+  }
+
+  void _showPasswordRequirements() {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.passwordRequirementsTitle,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(l10n.passwordRequirementMinLength),
+            Text(l10n.passwordRequirementCapital),
+            Text(l10n.passwordRequirementNumber),
+          ],
+        ),
+        backgroundColor: AppTheme.error,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _register() async {
@@ -123,6 +158,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
         }
+      }
+    } else {
+      // Check if password validation failed and show requirements
+      final passwordValue = _passwordController.text;
+      bool hasMinLength = passwordValue.length >= 8;
+      bool hasCapitalLetter = RegExp(r'[A-Z]').hasMatch(passwordValue);
+      bool hasNumber = RegExp(r'[0-9]').hasMatch(passwordValue);
+      
+      if (!hasMinLength || !hasCapitalLetter || !hasNumber) {
+        _showPasswordRequirements();
       }
     }
   }
@@ -242,7 +287,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                color: AppTheme.textLight,
+                                color: AppTheme.authHintText,
                               ),
                               onPressed: () {
                                 setState(() {

@@ -145,13 +145,6 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                                 color: TraineeProfileScreen._accentGreen,
                                 shape: BoxShape.circle,
                               ),
-                              child: IconButton(
-                                icon: const Icon(Icons.edit,
-                                    color: TraineeProfileScreen._navyColor),
-                                onPressed: () {
-                                  // TODO: Implement profile picture edit
-                                },
-                              ),
                             ),
                           ),
                         ],
@@ -185,18 +178,6 @@ class _TraineeProfileScreenState extends State<TraineeProfileScreen> {
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                   color: TraineeProfileScreen._navyColor,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // TODO: Implement edit functionality
-                                },
-                                child: Text(
-                                  l10n.edit,
-                                  style: const TextStyle(
-                                    color: TraineeProfileScreen._accentGreen,
-                                    fontWeight: FontWeight.bold,
-                                  ),
                                 ),
                               ),
                             ],

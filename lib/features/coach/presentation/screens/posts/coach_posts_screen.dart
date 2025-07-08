@@ -997,7 +997,6 @@ class _CoachPostsScreenState extends State<CoachPostsScreen> {
               bottom: 0,
               child: BottomNavBar(
                 role: UserRole.coach,
-                currentIndex: 3, // Profile tab
               ),
             ),
           ],

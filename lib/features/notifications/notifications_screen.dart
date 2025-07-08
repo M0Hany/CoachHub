@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/bottom_nav_bar.dart';
-import '../../core/widgets/chat_preview_bubble.dart';
+import '../../core/widgets/notification_preview_bubble.dart';
 import '../../core/constants/enums.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/network/http_client.dart';
 import 'dart:developer' as developer;
+import 'package:go_router/go_router.dart';
 
 class NotificationsScreen extends StatefulWidget {
   final UserRole userRole;
@@ -149,34 +150,35 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 ),
                               )
                             : _notifications.isEmpty
-                                ? const Center(
+                                ?  Center(
                                     child: Text(
-                                      'No notifications yet',
-                                      style: TextStyle(color: Colors.grey),
+                                      l10n.noNotificationsYet,
+                                      style: const TextStyle(color: Colors.grey),
                                     ),
                                   )
-                                : ListView.builder(
-                                    itemCount: _notifications.length,
-                                    itemBuilder: (context, index) {
-                                      final notification = _notifications[index];
-                                      final isLastItem = index == _notifications.length - 1;
-                                      
-                                      return Padding(
-                                        padding: EdgeInsets.only(bottom: isLastItem ? 16.0 : 0),
-                                        child: ChatPreviewBubble(
-                                          name: notification.fullName.isNotEmpty ? notification.fullName : 'User',
-                                          lastMessage: notification.message,
-                                          time: _formatTimeAgo(notification.createdAt),
-                                          imageUrl: notification.fullImageUrl ?? 'assets/images/default_profile.png',
-                                          unread: !notification.isRead,
-                                          unreadCount: notification.isRead ? 0 : 1,
-                                          onTap: () {
-                                            // Handle notification tap
-                                            // TODO: Implement notification action based on type
-                                          },
-                                        ),
-                                      );
-                                    },
+                                : Directionality(
+                                    textDirection: TextDirection.ltr,
+                                    child: ListView.builder(
+                                      itemCount: _notifications.length,
+                                      itemBuilder: (context, index) {
+                                        final notification = _notifications[index];
+                                        final isLastItem = index == _notifications.length - 1;
+                                        
+                                        return Padding(
+                                          padding: EdgeInsets.only(bottom: isLastItem ? 16.0 : 0),
+                                          child: NotificationPreviewBubble(
+                                            message: notification.message,
+                                            time: _formatTimeAgo(notification.createdAt),
+                                            imageUrl: notification.fullImageUrl,
+                                            is_read: notification.isRead,
+                                            onTap: () {
+                                              final otherUserId = notification.otherUserID;
+                                              context.push(widget.userRole == UserRole.trainee ? '/trainee/coach/$otherUserId': '/coach/view-trainee/$otherUserId');
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                   ),
                 ),
@@ -188,7 +190,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               right: 0,
               child: BottomNavBar(
                 role: widget.userRole,
-                currentIndex: 2, // Notifications tab
               ),
             ),
           ],
@@ -200,16 +201,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
 // Notification data model
 class NotificationData {
-  final int id;
-  final String fullName;
   final String? imageUrl;
+  final int otherUserID;
   final String message;
   final bool isRead;
   final String createdAt;
 
   NotificationData({
-    required this.id,
-    required this.fullName,
+    required this.otherUserID,
     this.imageUrl,
     required this.message,
     required this.isRead,
@@ -217,14 +216,9 @@ class NotificationData {
   });
 
   factory NotificationData.fromJson(Map<String, dynamic> json) {
-    // Fallback for name
-    final fallbackName = 'CoachHub';
-    String name = json['full_name'] as String? ?? fallbackName;
-    if (name.trim().isEmpty) name = fallbackName;
     return NotificationData(
-      id: json['id'] as int,
-      fullName: name,
-      imageUrl: json['image_url'] as String?,
+      otherUserID: json['other_user_id'] as int,
+      imageUrl: json['other_image_url'] as String?,
       message: json['message'] as String? ?? '',
       isRead: json['is_read'] as bool? ?? true,
       createdAt: json['created_at'] as String? ?? '',
@@ -236,8 +230,8 @@ class NotificationData {
       // Fallback to default asset image
       return null;
     }
-    return imageUrl!.startsWith('http') 
-        ? imageUrl 
+    return imageUrl!.startsWith('http')
+        ? imageUrl
         : 'https://coachhub-production.up.railway.app/$imageUrl';
   }
 } 

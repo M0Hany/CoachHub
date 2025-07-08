@@ -199,7 +199,6 @@ class _CoachReviewsScreenState extends State<CoachReviewsScreen> {
               bottom: 0,
               child: BottomNavBar(
                 role: UserRole.coach,
-                currentIndex: 3, // Profile tab
               ),
             ),
           ],

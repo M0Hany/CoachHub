@@ -10,7 +10,6 @@ import '../../../../../l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../features/coach/presentation/providers/coach_search_provider.dart';
 import '../../../../../features/coach/data/models/coach_model.dart';
-import 'view_coach_profile_screen.dart';
 
 class TraineeSearchScreen extends StatefulWidget {
   const TraineeSearchScreen({super.key});
@@ -57,6 +56,7 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
   }
 
   void _onFilterChanged(String filter) {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedFilter != filter) {
       setState(() {
         _selectedFilter = filter;
@@ -64,7 +64,7 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
       
       final provider = context.read<CoachSearchProvider>();
       provider.resetSearch();
-      if (filter == 'Recommendations') {
+      if (filter == l10n.recommendationsFilter) {
         provider.searchCoaches(refresh: true, isRecommendation: true);
       } else {
         provider.searchCoaches(refresh: true);
@@ -110,7 +110,7 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
                       Expanded(
                         child: Center(
                           child: Text(
-                            'Search',
+                            l10n.searchTitle,
                             style: AppTheme.bodyMedium.copyWith(
                               color: AppColors.accent,
                             ),
@@ -169,9 +169,9 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Row(
                         children: [
-                          _buildFilterChip('All'),
+                          _buildFilterChip(l10n.allFilter),
                           const SizedBox(width: 12),
-                          _buildFilterChip('Recommendations'),
+                          _buildFilterChip(l10n.recommendationsFilter),
                         ],
                       ),
                     ),
@@ -342,8 +342,8 @@ class _TraineeSearchScreenState extends State<TraineeSearchScreen> {
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              child: const Text(
-                'Show Profile',
+              child: Text(
+                l10n.viewCoach,
                 style: AppTheme.bodySmall,
               ),
             ),

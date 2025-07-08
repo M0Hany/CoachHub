@@ -197,7 +197,6 @@ class _TraineeCoachReviewsScreenState extends State<TraineeCoachReviewsScreen> {
       ),
       bottomNavigationBar: const BottomNavBar(
         role: UserRole.trainee,
-        currentIndex: 0,
       ),
     );
   }

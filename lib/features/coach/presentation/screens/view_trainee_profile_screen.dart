@@ -264,8 +264,6 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
                     extra: {
                       'recipientId': widget.traineeId.toString(),
                       'recipientName': profile?['full_name'] ?? 'Trainee',
-                      'currentUserId': 2, // TODO: Get from auth provider
-                      'chatId': null, // TODO: Get chat ID if available
                     },
                   );
                 },
@@ -479,6 +477,7 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
               clipBehavior: Clip.none,
               children: [
                 Container(
+                  width: double.infinity,
                   height: 100,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -571,7 +570,7 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(l10n.nutrition_plans_day, style: AppTheme.bodyMedium.copyWith(color: AppTheme.labelColor)),
+                Text(l10n.workout_plans_day, style: AppTheme.bodyMedium.copyWith(color: AppTheme.labelColor)),
                 Text('1', style: AppTheme.headerLarge.copyWith(color: AppColors.primary)),
               ],
             ),
@@ -582,6 +581,7 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
               clipBehavior: Clip.none,
               children: [
                 Container(
+                  width: double.infinity,
                   height: 100,
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -1014,13 +1014,13 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
 
   Future<void> _assignPlanToTrainee(BuildContext context, String planType, int planId) async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     try {
       final httpClient = HttpClient();
       final endpoint = planType == 'workout'
           ? '/api/plans/workout/assign/$planId'
           : '/api/plans/nutrition/assign/$planId';
-      
+
       final response = await httpClient.post<Map<String, dynamic>>(
         endpoint,
         data: {'trainee_id': widget.traineeId},
@@ -1031,29 +1031,29 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
 
 
       if (response.data?['status'] == 'success') {
-        
+
         // Check if widget is still mounted before updating UI
         if (!mounted) {
           return;
         }
-        
+
         // Fetch the assigned plan details to update the UI
         try {
           final planEndpoint = planType == 'workout'
               ? '/api/plans/workout/$planId'
               : '/api/plans/nutrition/$planId';
-          
+
           final planResponse = await httpClient.get<Map<String, dynamic>>(planEndpoint);
-          
+
           if (!mounted) {
             return;
           }
-          
+
           if (planResponse.data?['status'] == 'success') {
             final planData = planType == 'workout'
                 ? planResponse.data!['data']['workout_plan']
                 : planResponse.data!['data']['nutrition_plan'];
-            
+
             setState(() {
               if (planType == 'workout') {
                 _workoutPlan = planData;
@@ -1064,13 +1064,13 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
           }
         } catch (e) {
         }
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              planType == 'workout' 
-                  ? l10n.workoutPlanAssignedSuccessfully 
+              planType == 'workout'
+                  ? l10n.workoutPlanAssignedSuccessfully
                   : l10n.nutritionPlanAssignedSuccessfully,
             ),
             backgroundColor: Colors.green,
@@ -1083,12 +1083,12 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
           ),
         );
       } else {
-        
+
         // Check if widget is still mounted before showing snackbar
         if (!mounted) {
           return;
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response.data?['message'] ?? 'Failed to assign plan'),
@@ -1103,12 +1103,12 @@ class _ViewTraineeProfileScreenState extends State<ViewTraineeProfileScreen> wit
         );
       }
     } catch (e) {
-      
+
       // Check if widget is still mounted before showing snackbar
       if (!mounted) {
         return;
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),

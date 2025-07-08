@@ -52,6 +52,11 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     }
   }
 
+  String _formatExpertise(List<Experience>? experiences, AppLocalizations l10n) {
+    if (experiences == null || experiences.isEmpty) return l10n.notSet;
+    return experiences.map((e) => e.name).join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -195,61 +200,12 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
                           l10n.personalInfo,
                           style: AppTheme.bodyLarge,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // TODO: Implement edit functionality
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: AppColors.accent,
-                            foregroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                            elevation: 2,
-                            shadowColor: AppColors.shadowDark,
-                          ),
-                          child: Text(l10n.edit, style: AppTheme.buttonTextDark,),
-                        ),
                       ],
                     ),
                   ),
                   if (user.bio != null)
-                    _buildInfoRow(Icons.info_outline, 'Bio', user.bio!),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.fitness_center, size: 20, color: Colors.black87),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.coachExpertFields,
-                              style: AppTheme.labelText,
-                            ),
-                            if (user.experiences != null && user.experiences!.isNotEmpty)
-                              ...user.experiences!.map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    e.name,
-                                    style: AppTheme.mainText,
-                                  ),
-                                ),
-                              )
-                            else
-                              Text(
-                                'Not set',
-                                style: AppTheme.mainText,
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                    _buildInfoRow(Icons.info_outline, l10n.bio, user.bio!),
+                  _buildInfoRow(Icons.fitness_center, l10n.coachExpertFields, _formatExpertise(user.experiences, l10n)),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -531,21 +487,33 @@ class _CoachProfileScreenState extends State<CoachProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: Colors.black87),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: AppTheme.labelText,
-              ),
-              Text(
-                value,
-                style: AppTheme.mainText,
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Alexandria',
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontFamily: 'Alexandria',
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                  softWrap: true,
+                ),
+              ],
+            ),
           ),
         ],
       ),

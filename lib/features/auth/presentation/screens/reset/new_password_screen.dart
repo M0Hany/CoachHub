@@ -25,9 +25,48 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     super.dispose();
   }
 
+  void _showPasswordRequirements() {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.passwordRequirementsTitle,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(l10n.passwordRequirementMinLength),
+            Text(l10n.passwordRequirementCapital),
+            Text(l10n.passwordRequirementNumber),
+          ],
+        ),
+        backgroundColor: AppTheme.error,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _onConfirm() async {
     final l10n = AppLocalizations.of(context)!;
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Check if password validation failed and show requirements
+      final passwordValue = _passwordController.text;
+      bool hasMinLength = passwordValue.length >= 8;
+      bool hasCapitalLetter = RegExp(r'[A-Z]').hasMatch(passwordValue);
+      bool hasNumber = RegExp(r'[0-9]').hasMatch(passwordValue);
+      
+      if (!hasMinLength || !hasCapitalLetter || !hasNumber) {
+        _showPasswordRequirements();
+      }
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final token = OtpResetScreen.resetToken;
@@ -147,9 +186,16 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                       if (value == null || value.isEmpty) {
                         return l10n.validation_required;
                       }
-                      if (value.length < 6) {
-                        return l10n.validation_password_length;
+                      
+                      // Check password strength
+                      bool hasMinLength = value.length >= 8;
+                      bool hasCapitalLetter = RegExp(r'[A-Z]').hasMatch(value);
+                      bool hasNumber = RegExp(r'[0-9]').hasMatch(value);
+                      
+                      if (!hasMinLength || !hasCapitalLetter || !hasNumber) {
+                        return l10n.passwordRequirementMessage;
                       }
+                      
                       return null;
                     },
                   ),

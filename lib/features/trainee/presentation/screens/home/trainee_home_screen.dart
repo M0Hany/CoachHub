@@ -499,32 +499,42 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
                                           Expanded(
                                             child: Padding(
                                               padding: const EdgeInsets.all(16.0),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  for (var exercise in currentDayExercises)
-                                                    Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 8,
-                                                          height: 8,
-                                                          margin: const EdgeInsets.only(right: 8),
-                                                          decoration: const BoxDecoration(
-                                                            color: AppColors.accent,
-                                                            shape: BoxShape.circle,
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          exercise['exercise']['target_muscle'],
-                                                          style: AppTheme.headerMedium.copyWith(
-                                                            fontSize: 14,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                ],
-                                              ),
+                                              child: currentDayExercises.isNotEmpty
+                                                  ? SingleChildScrollView(
+                                                      physics: const BouncingScrollPhysics(),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        children: currentDayExercises.map((exercise) {
+                                                          return Padding(
+                                                            padding: const EdgeInsets.only(bottom: 4.0),
+                                                            child: Row(
+                                                              children: [
+                                                                Container(
+                                                                  width: 8,
+                                                                  height: 8,
+                                                                  margin: const EdgeInsetsDirectional.only(end: 8),
+                                                                  decoration: const BoxDecoration(
+                                                                    color: AppColors.accent,
+                                                                    shape: BoxShape.circle,
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    exercise['exercise']['target_muscle'],
+                                                                    style: AppTheme.headerMedium.copyWith(
+                                                                      fontSize: 14,
+                                                                    ),
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    )
+                                                  : const SizedBox.shrink(),
                                             ),
                                           ),
                                           Padding(
@@ -718,7 +728,13 @@ class _TraineeHomeScreenState extends State<TraineeHomeScreen> with SingleTicker
                                     // Chats icon
                                     GestureDetector(
                                       onTap: () {
-                                        // TODO: Open chat with coach
+                                        context.push(
+                                          '/chat/room/${_coachProfile?['id']}',
+                                          extra: {
+                                            'recipientId': _coachProfile?['id'],
+                                            'recipientName': _coachProfile?['full_name'] ?? 'Coach',
+                                          },
+                                        );
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 4.0),

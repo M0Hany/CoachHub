@@ -18,7 +18,6 @@ class ChatProvider extends ChangeNotifier {
   
   // Current chat context - matching JavaScript
   String? _currentRecipientId; // recipientId like JavaScript
-  int? _currentUserId; // Track current user ID like JavaScript
   int? _otherUserId;
   int _currentPage = 1;
   int _totalPages = 1;
@@ -33,7 +32,6 @@ class ChatProvider extends ChangeNotifier {
   bool get isConnected => _socketService.isConnected;
   bool get isConnecting => _socketService.isConnecting;
   String? get currentRecipientId => _currentRecipientId;
-  int? get currentUserId => _currentUserId;
   int? get otherUserId => _otherUserId;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
@@ -79,8 +77,12 @@ class ChatProvider extends ChangeNotifier {
   void _handlePrivateMessage(PrivateMessageEvent event) {
     developer.log('Handling private message: ${event.toJson()}', name: 'ChatProvider');
     
-    // Only handle messages for current recipient
-    if (event.from == _currentRecipientId || event.from == _currentUserId.toString()) {
+    // Always notify that new messages have arrived (for chat list refresh)
+    // This ensures the chat list updates even for messages from other users
+    notifyNewMessages();
+    
+    // Only add message to current chat if it's from the current recipient
+    if (event.from == _currentRecipientId) {
       // Add message to the current chat
       final message = MessageModel(
         id: DateTime.now().millisecondsSinceEpoch, // Temporary ID
@@ -92,7 +94,17 @@ class ChatProvider extends ChangeNotifier {
       
       _messages.add(message);
       notifyListeners();
+      
+      developer.log('Added message to chat: ${message.content}', name: 'ChatProvider');
+    } else {
+      developer.log('Message from ${event.from} - updating chat list only, current recipient: $_currentRecipientId', name: 'ChatProvider');
     }
+  }
+
+  /// Handle message delivery confirmation (optional)
+  void _handleMessageDelivered(String messageId) {
+    developer.log('Message delivered: $messageId', name: 'ChatProvider');
+    // You can update message status here if needed
   }
 
   /// Handle typing events (matching JavaScript structure)
@@ -138,9 +150,14 @@ class ChatProvider extends ChangeNotifier {
 
   /// Send a message (matching JavaScript structure)
   Future<void> sendMessage(String to, String content) async {
+    developer.log('🚀 ChatProvider.sendMessage called with to: $to, content: $content', name: 'ChatProvider');
+    
     try {
       // Ensure Socket.IO is connected
+      developer.log('🔌 Ensuring Socket.IO connection...', name: 'ChatProvider');
       await ensureConnected();
+      
+      developer.log('🔌 Socket connected: ${_socketService.isConnected}', name: 'ChatProvider');
       
       if (!_socketService.isConnected) {
         throw Exception('Socket not connected after connection attempt');
@@ -150,20 +167,24 @@ class ChatProvider extends ChangeNotifier {
       final tempMessage = MessageModel(
         id: DateTime.now().millisecondsSinceEpoch,
         content: content,
-        senderId: _currentUserId ?? 0,
+        senderId: 0, // Will be updated when we receive confirmation
         chatId: 0,
         createdAt: DateTime.now(),
       );
       
-      // Add message to UI immediately
+      // Add message to UI immediately for instant feedback
       _messages.add(tempMessage);
       notifyListeners();
+      
+      developer.log('📤 ChatProvider calling _socketService.sendPrivateMessage($to, $content)', name: 'ChatProvider');
       
       // Send via Socket.IO (matching JavaScript structure)
       _socketService.sendPrivateMessage(to, content);
       
+      developer.log('✅ Message sent successfully via Socket.IO', name: 'ChatProvider');
+      
     } catch (e) {
-      developer.log('Error sending message: $e', name: 'ChatProvider', error: e);
+      developer.log('❌ Error sending message: $e', name: 'ChatProvider', error: e);
       rethrow;
     }
   }
@@ -176,9 +197,9 @@ class ChatProvider extends ChangeNotifier {
   }
 
   /// Set current chat context (matching JavaScript structure)
-  void setCurrentChat(String recipientId, int currentUserId) {
+  void setCurrentChat(String recipientId) {
+    developer.log('Setting current chat to recipient: $recipientId', name: 'ChatProvider');
     _currentRecipientId = recipientId;
-    _currentUserId = currentUserId;
     _messages.clear(); // Clear messages when switching chats
     _typingUsers.clear(); // Clear typing status
     notifyListeners();
@@ -222,7 +243,12 @@ class ChatProvider extends ChangeNotifier {
     _messages.clear();
     _typingUsers.clear();
     _currentRecipientId = null;
-    _currentUserId = null;
+    notifyListeners();
+  }
+
+  /// Notify that new messages have arrived (for chat list refresh)
+  void notifyNewMessages() {
+    developer.log('Notifying new messages arrived', name: 'ChatProvider');
     notifyListeners();
   }
 
@@ -236,8 +262,20 @@ class ChatProvider extends ChangeNotifier {
     _socketService.disconnect();
   }
 
+  /// Test socket connection
+  void testConnection() {
+    developer.log('🧪 Testing socket connection...', name: 'ChatProvider');
+    _socketService.sendPing();
+  }
+
+  /// Test private message
+  void testPrivateMessage() {
+    developer.log('🧪 Testing private message...', name: 'ChatProvider');
+    _socketService.testPrivateMessage();
+  }
+
   /// Load chat history from a raw API message list (as returned by /api/chat/{id})
-  void loadChatHistoryFromApi(List<dynamic> messages, int currentUserId, int otherUserId, {int? currentPage, int? totalPages, bool replace = true}) {
+  void loadChatHistoryFromApi(List<dynamic> messages, int otherUserId, {int? currentPage, int? totalPages, bool replace = true}) {
     final parsedMessages = messages.map((msg) {
       return MessageModel(
         id: msg['id'] as int,
@@ -252,7 +290,6 @@ class ChatProvider extends ChangeNotifier {
     } else {
       _messages = [...parsedMessages, ..._messages]; // Prepend older messages
     }
-    _currentUserId = currentUserId;
     _otherUserId = otherUserId;
     if (currentPage != null) _currentPage = currentPage;
     if (totalPages != null) _totalPages = totalPages;
@@ -261,7 +298,7 @@ class ChatProvider extends ChangeNotifier {
   }
 
   /// Fetch and prepend older messages (pagination)
-  Future<void> fetchOlderMessages({required int otherUserId, required int currentUserId}) async {
+  Future<void> fetchOlderMessages({required int otherUserId}) async {
     if (_isLoadingMore || !_hasMore) return;
     _isLoadingMore = true;
     notifyListeners();
@@ -282,7 +319,7 @@ class ChatProvider extends ChangeNotifier {
         final int totalPages = data['pagination']?['totalPages'] ?? 1;
         final int currentPage = data['pagination']?['currentPage'] ?? nextPage;
         final reversedMessages = List.from(messages.reversed);
-        loadChatHistoryFromApi(reversedMessages, currentUserId, otherUserId, currentPage: currentPage, totalPages: totalPages, replace: false);
+        loadChatHistoryFromApi(reversedMessages, otherUserId, currentPage: currentPage, totalPages: totalPages, replace: false);
         developer.log('[ChatProvider] Older messages loaded: page $currentPage / $totalPages', name: 'ChatProvider');
       }
     } catch (e, st) {
@@ -293,12 +330,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Helper for alignment with debug log
-  bool isMessageFromCurrentUser(MessageModel message) {
-    final isMe = message.senderId == _currentUserId;
-    developer.log('[ChatProvider] Message ${message.id} sender_id=${message.senderId} currentUserId=$_currentUserId otherUserId=$_otherUserId isMe=$isMe', name: 'ChatProvider');
-    return isMe;
-  }
 
   @override
   void dispose() {

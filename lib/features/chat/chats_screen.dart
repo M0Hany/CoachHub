@@ -8,8 +8,10 @@ import '../../core/constants/enums.dart';
 import '../../core/widgets/chat_preview_bubble.dart';
 import '../../core/network/http_client.dart';
 import '../auth/presentation/providers/auth_provider.dart';
+import '../../core/providers/chat_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:developer' as developer;
+import '../../l10n/app_localizations.dart';
 
 class ChatsScreen extends StatefulWidget {
   final UserRole userRole;
@@ -32,6 +34,32 @@ class _ChatsScreenState extends State<ChatsScreen> {
   void initState() {
     super.initState();
     _fetchChats();
+    
+    // Listen for new messages to refresh chat list
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatProvider = context.read<ChatProvider>();
+      // Initialize chat provider if not already done
+      if (!chatProvider.isConnected) {
+        chatProvider.initialize();
+      }
+      
+      // Set up listener for new messages to refresh chat list
+      chatProvider.addListener(_onChatProviderChanged);
+    });
+  }
+
+  @override
+  void dispose() {
+    final chatProvider = context.read<ChatProvider>();
+    chatProvider.removeListener(_onChatProviderChanged);
+    super.dispose();
+  }
+
+  void _onChatProviderChanged() {
+    // Refresh chat list when new messages arrive
+    if (mounted) {
+      _fetchChats();
+    }
   }
 
   Future<void> _fetchChats() async {
@@ -95,6 +123,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: AppColors.primary,
@@ -119,9 +148,9 @@ class _ChatsScreenState extends State<ChatsScreen> {
                     left: 24,
                     right: 24,
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      "Messages",
+                      l10n.messages,
                       style: AppTheme.screenTitle,
                     ),
                   ),
@@ -129,63 +158,73 @@ class _ChatsScreenState extends State<ChatsScreen> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 80),
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _error != null
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      _error!,
-                                      style: const TextStyle(color: Colors.red),
+                    child: RefreshIndicator(
+                      onRefresh: _fetchChats,
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _error != null
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _error!,
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: _fetchChats,
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : _chats.isEmpty
+                                  ? SingleChildScrollView(
+                                      physics: const AlwaysScrollableScrollPhysics(),
+                                      child: SizedBox(
+                                        height: MediaQuery.of(context).size.height * 0.6,
+                                        child: Center(
+                                          child: Text(
+                                            l10n.noChatsYet,
+                                            style: const TextStyle(color: Colors.grey),
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: ListView.builder(
+                                        itemCount: _chats.length,
+                                        itemBuilder: (context, index) {
+                                          final chat = _chats[index];
+                                          final isLastItem = index == _chats.length - 1;
+                            
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: isLastItem ? 24.0 : 0),
+                            child: ChatPreviewBubble(
+                              name: chat.otherUser.fullName,
+                              lastMessage: chat.lastMessage?.content ?? '',
+                              time: _formatTimeAgo(chat.lastMessage?.createdAt ?? ''),
+                              imageUrl: chat.otherUser.fullImageUrl,
+                              unread: chat.unreadCount > 0,
+                              unreadCount: chat.unreadCount,
+                              onTap: () {
+                                final authProvider = context.read<AuthProvider>();
+                                context.push(
+                                  '/chat/room/${chat.otherUser.id}',
+                                  extra: {
+                                    'recipientId': chat.otherUser.id.toString(),
+                                    'recipientName': chat.otherUser.fullName,
+                                    'chatId': chat.chatId.toString(),
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        },
+                                      ),
                                     ),
-                                    const SizedBox(height: 16),
-                                    ElevatedButton(
-                                      onPressed: _fetchChats,
-                                      child: const Text('Retry'),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : _chats.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      'No chats yet',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: _chats.length,
-                      itemBuilder: (context, index) {
-                                      final chat = _chats[index];
-                                      final isLastItem = index == _chats.length - 1;
-                        
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: isLastItem ? 24.0 : 0),
-                          child: ChatPreviewBubble(
-                                          name: chat.otherUser.fullName,
-                                          lastMessage: chat.lastMessage.content,
-                                          time: _formatTimeAgo(chat.lastMessage.createdAt),
-                                          imageUrl: chat.otherUser.fullImageUrl,
-                                          unread: chat.unreadCount > 0,
-                                          unreadCount: chat.unreadCount,
-                                          onTap: () {
-                                            final authProvider = context.read<AuthProvider>();
-                                            final currentUserId = authProvider.currentUser?.id ?? 0;
-                                            context.push(
-                                              '/chat/room/${chat.otherUser.id}',
-                                              extra: {
-                                                'recipientId': chat.otherUser.id.toString(),
-                                                'recipientName': chat.otherUser.fullName,
-                                                'currentUserId': currentUserId,
-                                                'chatId': chat.chatId.toString(),
-                                              },
-                                            );
-                                          },
-                          ),
-                        );
-                      },
                     ),
                   ),
                 ),
@@ -211,7 +250,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
 class ChatData {
   final int chatId;
   final UserData otherUser;
-  final MessageData lastMessage;
+  final MessageData? lastMessage;
   final int unreadCount;
 
   ChatData({
@@ -225,7 +264,9 @@ class ChatData {
     return ChatData(
       chatId: json['chat_id'] as int,
       otherUser: UserData.fromJson(json['other_user'] as Map<String, dynamic>),
-      lastMessage: MessageData.fromJson(json['last_message'] as Map<String, dynamic>),
+      lastMessage: json['last_message'] != null
+          ? MessageData.fromJson(json['last_message'] as Map<String, dynamic>)
+          : null,
       unreadCount: json['unread_count'] as int,
     );
   }

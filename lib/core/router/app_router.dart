@@ -384,7 +384,6 @@ final GoRouter appRouter = GoRouter(
             return ChatRoomScreen(
               recipientId: recipientId,
               recipientName: extra?['recipientName'] ?? 'User',
-              currentUserId: extra?['currentUserId'] ?? 0,
               chatId: extra?['chatId'],
             );
           },
@@ -433,9 +432,16 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: 'plans/workout/muscles',
-          builder: (context, state) => const MuscleSelectionScreen(
-            dayNumber: 1,
-          ),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final dayNumber = extra['day_number'] as int? ?? 1;
+            final selectedMuscles = extra['selected_muscles'] as List<String>?;
+            print('Router: Building muscle selection screen with dayNumber: $dayNumber, selectedMuscles: $selectedMuscles');
+            return MuscleSelectionScreen(
+              dayNumber: dayNumber,
+              selectedMuscles: selectedMuscles,
+            );
+          },
         ),
         GoRoute(
           path: 'plans/workout/exercises',
@@ -507,7 +513,6 @@ final GoRouter appRouter = GoRouter(
             return ChatRoomScreen(
               recipientId: recipientId,
               recipientName: extra?['recipientName'] ?? 'User',
-              currentUserId: extra?['currentUserId'] ?? 0,
               chatId: extra?['chatId'],
             );
           },
@@ -613,7 +618,6 @@ final GoRouter appRouter = GoRouter(
         return ChatRoomScreen(
           recipientId: recipientId,
           recipientName: extra?['recipientName'] ?? 'User',
-          currentUserId: extra?['currentUserId'] ?? 0,
           chatId: extra?['chatId'],
         );
       },
